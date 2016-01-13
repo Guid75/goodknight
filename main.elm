@@ -1,6 +1,9 @@
 import Debug
 import Html exposing (div, button, text)
+import Graphics.Element exposing (..)
 import Html.Events exposing (onClick)
+import Html.Attributes exposing (..)
+import Text
 import StartApp.Simple as StartApp
 import Cards exposing (..)
 
@@ -13,11 +16,19 @@ model = 0
 
 view address model =
   div []
-    [ button [ onClick address Decrement ] [ text "-" ]
-    , div [] [ text (toString model) ]
-    , button [ onClick address Increment ] [ text "+" ]
-    ]
+    (List.map textToDiv initialLandscapeDeck)
 
+-- transform anything into an HTML div with just its textual representation
+textToDiv : a -> Html.Html
+textToDiv a = div [landscapeStyle] [(text << toString) a]
+
+landscapeStyle : Html.Attribute
+landscapeStyle =
+  style
+  [ ("font-size", "15px")
+  , ("font-family", "monospace")
+  , ("text-align", "center")
+  ]
 
 type Action = Increment | Decrement
 

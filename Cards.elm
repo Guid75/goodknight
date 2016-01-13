@@ -36,8 +36,8 @@ type alias LandscapeCard =
 allNeutral : (LandscapeItem, LandscapeItem, LandscapeItem)
 allNeutral = (Neutral, Neutral, Neutral)
 
-initialDeck : List LandscapeCard
-initialDeck =
+initialLandscapeDeck : List LandscapeCard
+initialLandscapeDeck =
   [ { corners = allNeutral
     , edges = (Neutral, Cross Yellow, Cross Red)
     , center = Neutral
