@@ -27,10 +27,10 @@ type alias LandscapeEdges =
 type alias LandscapeCenter = LandscapeItem
 
 type alias LandscapeCard =
-  { corners: LandscapeCorners
+  { corners : LandscapeCorners
     -- the fist element of the edges tuple immediately geometrically follows the first element of the corners tuple
-  , edges: LandscapeEdges
-  , center: LandscapeCenter
+  , edges : LandscapeEdges
+  , center : LandscapeCenter
   }
 
 allNeutral : (LandscapeItem, LandscapeItem, LandscapeItem)
@@ -38,7 +38,11 @@ allNeutral = (Neutral, Neutral, Neutral)
 
 initialLandscapeDeck : List LandscapeCard
 initialLandscapeDeck =
-  [ { corners = allNeutral
+  [ { corners = (Neutral, Tournament, Neutral)
+    , edges = allNeutral
+    , center = Castle
+    }
+  , { corners = allNeutral
     , edges = (Neutral, Cross Yellow, Cross Red)
     , center = Neutral
     }
@@ -89,10 +93,6 @@ initialLandscapeDeck =
   , { corners = allNeutral
     , edges = (Neutral, Cross Yellow, Neutral)
     , center = Neutral
-    }
-  , { corners = (Neutral, Tournament, Neutral)
-    , edges = allNeutral
-    , center = Castle
     }
   , { corners = (Neutral, Tournament, Neutral)
     , edges = (Neutral, Neutral, Cross Red)
@@ -185,8 +185,8 @@ initialLandscapeDeck =
   ]
 
 type alias ChallengeCard =
-  { colors: (Color, Color)
-  , challenge: Challenge
+  { colors : (Color, Color)
+  , challenge : Challenge
   }
 
 -- 3 same cards by challenge => 18 challenge cards
