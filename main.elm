@@ -7,6 +7,7 @@ import Text
 import StartApp.Simple as StartApp
 import Cards exposing (..)
 import Board exposing (setCell)
+import Rules
 import Dict
 import Maybe
 
@@ -20,6 +21,8 @@ yDict =
 
 board =
   Dict.singleton 0 yDict
+
+rotatedCard = Debug.log "ok" (Maybe.map (rotateLandscapeCard 2) (List.head initialLandscapeDeck))
 
 newBoard = Debug.log "new board:" (board
                                    |> setCell (7, 0, Board.CellRight) { landscapeIndex = 10, rotation = 0 }

@@ -211,3 +211,14 @@ challengeCards =
     , challenge = PrincessChallenge
     }
   ]
+
+shiftRight3 : Int -> (a, a, a) -> (a, a, a)
+shiftRight3 ticks (x, y, z) =
+  case ticks of
+    0 -> (x, y, z)
+    n -> shiftRight3 (n - 1) (z, x, y)
+
+rotateLandscapeCard : Int -> LandscapeCard -> LandscapeCard
+rotateLandscapeCard ticks card =
+  { card | corners = shiftRight3 ticks card.corners,
+    edges = shiftRight3 ticks card.edges }

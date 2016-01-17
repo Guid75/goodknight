@@ -3,6 +3,8 @@ module Board where
 import Dict
 import Maybe exposing (andThen)
 
+import Cards exposing (..)
+
 type CellPosition = CellLeft
                   | CellRight
 
@@ -34,6 +36,12 @@ getCell (x, y, pos) board =
       CellLeft -> maybeBinome `andThen` .left
       CellRight -> maybeBinome `andThen` .right
 
+isEmptyCell : CellCoordinates -> Board -> Bool
+isEmptyCell coord board =
+  case getCell coord board of
+    Just cell -> False
+    Nothing -> True
+
 setCell : CellCoordinates -> Cell -> Board -> Board
 setCell (x, y, pos) cell board =
   let
@@ -47,9 +55,3 @@ setCell (x, y, pos) cell board =
     case maybeColumn of
       Just yDict -> Dict.insert x (Dict.insert y newBinome yDict) board
       Nothing -> Dict.insert x (Dict.singleton y newBinome) board
-
-isEmptyCell : CellCoordinates -> Board -> Bool
-isEmptyCell coord board =
-  case getCell coord board of
-    Just cell -> False
-    Nothing -> True

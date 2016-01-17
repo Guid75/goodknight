@@ -6,14 +6,15 @@ import String
 import Dict
 
 import Board
+import Rules
 
 boardSuite : Test
 boardSuite =
   let
-    yDict =
+    column =
       Dict.singleton 0 ({ left = Just { landscapeIndex = 0, rotation = 0 }, right = Nothing })
     board =
-      Dict.singleton 0 yDict
+      Dict.singleton 0 column
   in
     suite "Testing Board module"
             [ test "isEmptyCell should return false for (0, 0, CellLeft)"
@@ -28,8 +29,28 @@ boardSuite =
                      (assertEqual Nothing (Board.getCellBinome (0, 1) board))
             ]
 
+rulesSuite : Test
+rulesSuite =
+  let
+    column =
+      Dict.singleton 0 ({ left = Just { landscapeIndex = 0, rotation = 0 }, right = Nothing })
+    board =
+      Dict.singleton 0 column
+  in
+    suite "Testing Board module"
+            [ test "isPossibleMove should return true for this card (2) and this rotation (3)"
+                     (assert (Rules.isPossibleMove
+                                    (0, 1, Board.CellRight)
+                                    2  3  board))
+            , test "isPossibleMove should return false for this card (2) and this rotation (0)"
+                     (assert (not (Rules.isPossibleMove
+                                    (0, 0, Board.CellRight)
+                                    2  0  board)))
+            ]
+
 all : Test
 all =
   suite "A Test Suite"
           [ boardSuite
+          , rulesSuite
           ]
