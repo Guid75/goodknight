@@ -22,7 +22,7 @@ yDict =
 board =
   Dict.singleton 0 yDict
 
-rotatedCard = Debug.log "ok" (Maybe.map (rotateLandscapeCard 2) (List.head initialLandscapeDeck))
+rotatedCard = Debug.log "ok" (Maybe.map (rotateLandscapeCard 0) (List.head initialLandscapeDeck))
 
 newBoard = Debug.log "new board:" (board
                                    |> setCell (7, 0, Board.CellRight) { landscapeIndex = 10, rotation = 0 }
