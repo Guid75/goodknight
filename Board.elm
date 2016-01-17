@@ -1,6 +1,7 @@
 module Board where
 
 import Dict
+import Maybe exposing (andThen)
 
 type CellPosition = CellLeft
                   | CellRight
@@ -20,45 +21,35 @@ type alias CellBinome =
 type alias Board =
   Dict.Dict Int (Dict.Dict Int CellBinome)
 
-getCellBinomeInBoard : (Int, Int) -> Board -> CellBinome
-getCellBinomeInBoard (x, y) board =
-  let
-    yRaw = Dict.get x board
-  in
-    case yRaw of
-      Just yDict ->
-        case Dict.get y yDict of
-          Just c -> c
-          Nothing -> { left = Nothing, right = Nothing }
-      Nothing -> { left = Nothing, right = Nothing }
+getCellBinome : (Int, Int) -> Board -> Maybe CellBinome
+getCellBinome (x, y) board =
+  Dict.get x board `andThen` Dict.get y
 
-getCellInBoard : CellCoordinates -> Board -> Maybe Cell
-getCellInBoard (x, y, pos) board =
+getCell : CellCoordinates -> Board -> Maybe Cell
+getCell (x, y, pos) board =
   let
-    cellBinome = getCellBinomeInBoard (x, y) board
+    maybeBinome = getCellBinome (x, y) board
   in
     case pos of
-      CellLeft -> cellBinome.left
-      CellRight -> cellBinome.right
+      CellLeft -> maybeBinome `andThen` .left
+      CellRight -> maybeBinome `andThen` .right
+
+setCell : CellCoordinates -> Cell -> Board -> Board
+setCell (x, y, pos) cell board =
+  let
+    maybeColumn = Dict.get x board
+    binome = getCellBinome (x, y) board
+    newBinome =
+      case pos of
+        CellLeft -> { left = Just cell, right = binome `andThen` .right }
+        CellRight -> { left = binome `andThen` .left, right = Just cell }
+  in
+    case maybeColumn of
+      Just yDict -> Dict.insert x (Dict.insert y newBinome yDict) board
+      Nothing -> Dict.insert x (Dict.singleton y newBinome) board
 
 isEmptyCell : CellCoordinates -> Board -> Bool
 isEmptyCell coord board =
-  let
-    cell = getCellInBoard coord board
-  in
-    case cell of
-      Just cell -> False
-      Nothing -> True
-
-setCellInBoard : CellCoordinates -> Cell -> Board -> Board
-setCellInBoard (x, y, pos) cell board =
-  let
-    yRaw = Dict.get x board
-    oldCellBinome = getCellBinomeInBoard (x, y) board
-    cellBinome = case pos of
-             CellLeft -> { left = Just cell, right = oldCellBinome.right }
-             CellRight -> { left = oldCellBinome.left, right = Just cell }
-  in
-    case yRaw of
-      Just yDict -> Dict.insert x (Dict.insert y cellBinome yDict) board
-      Nothing -> Dict.insert x (Dict.singleton y cellBinome) board
+  case getCell coord board of
+    Just cell -> False
+    Nothing -> True

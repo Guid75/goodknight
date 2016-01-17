@@ -22,6 +22,10 @@ boardSuite =
                      (assert (Board.isEmptyCell (0, 0, Board.CellRight) board))
             , test "isEmptyCell should return true for (0, 1, CellLeft)"
                      (assert (Board.isEmptyCell (0, 1, Board.CellLeft) board))
+            , test "getCellBinome should return Just a binome for (0, 0)"
+                     (assertNotEqual Nothing (Board.getCellBinome (0, 0) board))
+            , test "getCellBinome should return Nothing for (0, 1)"
+                     (assertEqual Nothing (Board.getCellBinome (0, 1) board))
             ]
 
 all : Test
