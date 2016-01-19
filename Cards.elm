@@ -213,12 +213,18 @@ challengeCards =
   ]
 
 shiftRight3 : Int -> (a, a, a) -> (a, a, a)
-shiftRight3 ticks (x, y, z) =
-  case ticks of
-    0 -> (x, y, z)
-    n -> shiftRight3 ((n - 1) % 3) (z, x, y)
+shiftRight3 ticks trio =
+  let
+    shift ticks (x, y, z) =
+      case ticks of
+        0 -> (x, y, z)
+        n -> shift (n - 1) (z, x, y)
+  in
+    shift (ticks % 3) trio
 
 rotateLandscapeCard : Int -> LandscapeCard -> LandscapeCard
 rotateLandscapeCard ticks card =
-  { card | corners = shiftRight3 ticks card.corners,
-    edges = shiftRight3 ticks card.edges }
+  { card
+    | corners = shiftRight3 ticks card.corners
+    , edges = shiftRight3 ticks card.edges
+  }
