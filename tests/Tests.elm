@@ -12,14 +12,18 @@ import Rules
 cardsSuite : Test
 cardsSuite =
     suite "Testing Cards module"
-            [ test "shiftRight3 should return (1, 2, 3) for (1, 2, 3) with a tick value of 0"
-                     (assertEqual (Cards.shiftRight3 0 (1, 2, 3)) (1, 2, 3))
-            , test "shiftRight3 should return (3, 1, 2) for (1, 2, 3) with a tick value of 1"
-                     (assertEqual (Cards.shiftRight3 1 (1, 2, 3)) (3, 1, 2))
-            , test "shiftRight3 should return (2, 3, 1) for (1, 2, 3) with a tick value of 2"
-                     (assertEqual (Cards.shiftRight3 2 (1, 2, 3)) (2, 3, 1))
-            , test "shiftRight3 should return (1, 2, 3) for (1, 2, 3) with a tick value of 3"
-                     (assertEqual (Cards.shiftRight3 3 (1, 2, 3)) (1, 2, 3))
+            [ test "shift3 should return (1, 2, 3) for (1, 2, 3) with a tick value of 0"
+                     (assertEqual (Cards.shift3 0 (1, 2, 3)) (1, 2, 3))
+            , test "shift3 should return (3, 1, 2) for (1, 2, 3) with a tick value of 1"
+                     (assertEqual (Cards.shift3 1 (1, 2, 3)) (3, 1, 2))
+            , test "shift3 should return (2, 3, 1) for (1, 2, 3) with a tick value of 2"
+                     (assertEqual (Cards.shift3 2 (1, 2, 3)) (2, 3, 1))
+            , test "shift3 should return (1, 2, 3) for (1, 2, 3) with a tick value of 3"
+                     (assertEqual (Cards.shift3 3 (1, 2, 3)) (1, 2, 3))
+            , test "shift3 should return (2, 3, 1) for (1, 2, 3) with a tick value of -1"
+                     (assertEqual (Cards.shift3 -1 (1, 2, 3)) (2, 3, 1))
+            , test "shift3 should return (3, 1, 2) for (1, 2, 3) with a tick value of -2"
+                     (assertEqual (Cards.shift3 -2 (1, 2, 3)) (3, 1, 2))
             ]
 
 boardSuite : Test

@@ -16,11 +16,7 @@ main =
 
 model = 0
 
-yDict =
-  Dict.singleton 0 ({ left = Just { landscapeIndex = 0, rotation = 0 }, right = Nothing })
-
-board =
-  Dict.singleton 0 yDict
+board = Board.init
 
 rotatedCard = Debug.log "ok" (Maybe.map (rotateLandscapeCard 0) (List.head initialLandscapeDeck))
 

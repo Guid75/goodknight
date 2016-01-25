@@ -23,6 +23,14 @@ type alias CellBinome =
 type alias Board =
   Dict.Dict Int (Dict.Dict Int CellBinome)
 
+init : Board
+init =
+  Dict.singleton 0
+        (Dict.singleton 0
+               { left = Just { landscapeIndex = 0, rotation = 0 }
+               , right = Nothing }
+        )
+
 getCellBinome : (Int, Int) -> Board -> Maybe CellBinome
 getCellBinome (x, y) board =
   Dict.get x board `andThen` Dict.get y
