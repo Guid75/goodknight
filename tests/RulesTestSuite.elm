@@ -28,6 +28,19 @@ general =
                     )
                 )
             , test
+                "isPossibleMove should return true for this card (2) and this rotation (2)"
+                (assert
+                    (Rules.isPossibleMove
+                        ( 0, 0, Board.CellRight )
+                        { corners = ( Tournament, Neutral, Neutral )
+                        , edges = allNeutral
+                        , center = Neutral
+                        }
+                        2
+                        board
+                    )
+                )
+            , test
                 "isPossibleMove should return false for this card (2) and this rotation (0)"
                 (assert
                     (not
