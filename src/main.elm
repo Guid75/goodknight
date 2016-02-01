@@ -1,7 +1,7 @@
 module Main (..) where
 
 import Debug
-import Html exposing (div, button, text)
+import Html exposing (div, button, text, pre)
 import Graphics.Element exposing (..)
 import Html.Events exposing (onClick)
 import Html.Attributes exposing (..)
@@ -48,6 +48,7 @@ newBoard =
         )
 
 
+
 -- b2 =
 --     Debug.log
 --         "ok2"
@@ -57,16 +58,31 @@ newBoard =
 --             0
 --             newBoard
 --         )
+--    .-------.
+--   / \     /
+--  R   Y   /
+-- /     \ /
+--T-------.-------.
+-- \     / \     /
+--  \   /   \   /
+--   \ /     \ /
+--    .-------.
 
 
 view address model =
     div
         []
-        (List.map (textToDiv landscapeStyle) (Array.toList initialLandscapeDeck))
+        [ pre
+            []
+            [ text "    N\n   / \\\n  R   Y\n /     \\\nT-------N" ]
+        ]
 
 
 
--- transform anything into an HTML div with just its textual representation
+-- div
+--     []
+--     (List.map (textToDiv landscapeStyle) (Array.toList initialLandscapeDeck))
+{- transform anything into an HTML div with just its textual representation -}
 
 
 textToDiv : Html.Attribute -> a -> Html.Html

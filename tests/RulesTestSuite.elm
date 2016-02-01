@@ -15,7 +15,7 @@ general =
         suite
             "Testing Rules module"
             [ test
-                "isPossibleMove should return true for this card (2) and this rotation (1)"
+                "isPossibleMove should return true for this card (2) and this rotation (0)"
                 (assert
                     (Rules.isPossibleMove
                         ( 0, -1, Board.CellRight )
@@ -23,12 +23,12 @@ general =
                         , edges = allNeutral
                         , center = Neutral
                         }
-                        1
+                        0
                         board
                     )
                 )
             , test
-                "isPossibleMove should return true for this card (2) and this rotation (2)"
+                "isPossibleMove should return true for this card (2) and this rotation (1)"
                 (assert
                     (Rules.isPossibleMove
                         ( 0, 0, Board.CellRight )
@@ -36,7 +36,7 @@ general =
                         , edges = allNeutral
                         , center = Neutral
                         }
-                        2
+                        1
                         board
                     )
                 )
