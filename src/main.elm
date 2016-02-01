@@ -1,6 +1,10 @@
 module Main (..) where
 
 import Debug
+import Dict
+import Array
+import Maybe
+import Result
 import Html exposing (div, button, text, pre)
 import Graphics.Element exposing (..)
 import Html.Events exposing (onClick)
@@ -10,10 +14,7 @@ import StartApp.Simple as StartApp
 import Cards exposing (..)
 import Board exposing (setCell)
 import Rules
-import Dict
-import Array
-import Maybe
-import Result
+import Render
 
 
 main =

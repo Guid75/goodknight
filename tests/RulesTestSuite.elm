@@ -81,7 +81,7 @@ isPossibleMoveOnLeft =
                     )
                 )
             , test
-                "isPossibleMove should return true for this card (2) and this rotation (1)"
+                "isPossibleMove should return true for this card (2) and this rotation (0)"
                 (assert
                     (Rules.isPossibleMove
                         ( 0, 1, Board.CellLeft )
@@ -94,7 +94,7 @@ isPossibleMoveOnLeft =
                     )
                 )
             , test
-                "isPossibleMove should return false for this card (2) and this rotation (0)"
+                "isPossibleMove should return false for this card (2) and this rotation (2)"
                 (assert
                     (Rules.isPossibleMove
                         ( 1, 0, Board.CellLeft )
