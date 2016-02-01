@@ -30,18 +30,29 @@ type alias Board =
     }
 
 
-init : Board
-init =
-    { landscapes =
-        Dict.singleton
-            0
-            (Dict.singleton
+init : CellPosition -> Board
+init pos =
+    let
+        binome =
+            case pos of
+                CellLeft ->
+                    { left = Array.get 0 initialLandscapeDeck
+                    , right = Nothing
+                    }
+
+                CellRight ->
+                    { left = Nothing
+                    , right = Array.get 0 initialLandscapeDeck
+                    }
+    in
+        { landscapes =
+            Dict.singleton
                 0
-                { left = Array.get 0 initialLandscapeDeck
-                , right = Nothing
-                }
-            )
-    }
+                (Dict.singleton
+                    0
+                    binome
+                )
+        }
 
 
 getCellBinome : ( Int, Int ) -> Grid a -> Maybe (CellBinome a)

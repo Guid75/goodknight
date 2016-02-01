@@ -8,7 +8,7 @@ import Board
 general : Test
 general =
     let
-        board = Board.init
+        board = Board.init Board.CellLeft
     in
         suite
             "Testing Board module"

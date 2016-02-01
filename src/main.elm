@@ -25,7 +25,7 @@ model =
 
 
 board =
-    Board.init
+    Board.init Board.CellLeft
 
 
 

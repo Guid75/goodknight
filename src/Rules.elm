@@ -39,7 +39,8 @@ isPossibleMove ( x, y, pos ) card rot board =
 
         ( s0, s1, s2 ) = getSurroundingSides board ( x, y, pos )
     in
-        (not (List.all ((==) Nothing) [ s0, s1, s2 ]))
+        (isEmptyCell ( x, y, pos ) board.landscapes)
+            && (not (List.all ((==) Nothing) [ s0, s1, s2 ]))
             && (compatibleSides side0 s0)
             && (compatibleSides side1 s1)
             && (compatibleSides side2 s2)

@@ -7,13 +7,13 @@ import Board
 import Rules
 
 
-general : Test
-general =
+isPossibleMoveOnRight : Test
+isPossibleMoveOnRight =
     let
-        board = Board.init
+        board = Board.init Board.CellLeft
     in
         suite
-            "Testing Rules module"
+            "Testing isPossibleMove on a right cell"
             [ test
                 "isPossibleMove should return true for this card (2) and this rotation (0)"
                 (assert
@@ -56,3 +56,63 @@ general =
                     )
                 )
             ]
+
+
+isPossibleMoveOnLeft : Test
+isPossibleMoveOnLeft =
+    let
+        board = Board.init Board.CellRight
+    in
+        suite
+            "Testing isPossibleMove on a left cell"
+            [ test
+                "isPossibleMove should return true for this card (2) and this rotation (0)"
+                (assert
+                    (not
+                        (Rules.isPossibleMove
+                            ( 0, 0, Board.CellLeft )
+                            { corners = ( Tournament, Neutral, Neutral )
+                            , edges = allNeutral
+                            , center = Neutral
+                            }
+                            0
+                            board
+                        )
+                    )
+                )
+            , test
+                "isPossibleMove should return true for this card (2) and this rotation (1)"
+                (assert
+                    (Rules.isPossibleMove
+                        ( 0, 1, Board.CellLeft )
+                        { corners = ( Tournament, Neutral, Neutral )
+                        , edges = allNeutral
+                        , center = Neutral
+                        }
+                        0
+                        board
+                    )
+                )
+            , test
+                "isPossibleMove should return false for this card (2) and this rotation (0)"
+                (assert
+                    (Rules.isPossibleMove
+                        ( 1, 0, Board.CellLeft )
+                        { corners = ( Tournament, Neutral, Neutral )
+                        , edges = allNeutral
+                        , center = Neutral
+                        }
+                        2
+                        board
+                    )
+                )
+            ]
+
+
+general : Test
+general =
+    suite
+        "Testing Rules module"
+        [ isPossibleMoveOnLeft
+        , isPossibleMoveOnRight
+        ]
