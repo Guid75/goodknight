@@ -1,7 +1,7 @@
 module Board (..) where
 
 import Array
-import Dict
+import Dict exposing (Dict)
 import Maybe
 import Cards exposing (..)
 
@@ -21,8 +21,12 @@ type alias CellBinome a =
     }
 
 
+type alias Column a =
+    Dict Int (CellBinome a)
+
+
 type alias Grid a =
-    Dict.Dict Int (Dict.Dict Int (CellBinome a))
+    Dict Int (Column a)
 
 
 type alias Board =

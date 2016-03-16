@@ -43,9 +43,10 @@ newBoard =
     Debug.log
         "new board:"
         (board
-            |> Board.setLandscape ( 0, 1, Board.CellLeft ) (getLandscapeCardAndRotate 10 0)
-            |> Board.setLandscape ( 7, 9, Board.CellLeft ) (getLandscapeCardAndRotate 15 1)
-            |> Board.setLandscape ( 0, 15, Board.CellLeft ) (getLandscapeCardAndRotate 7 2)
+            |> Board.setLandscape ( 1, 0, Board.CellLeft ) (getLandscapeCardAndRotate 3 0)
+            |> Board.setLandscape ( 0, 0, Board.CellRight ) (getLandscapeCardAndRotate 3 0)
+            |> Board.setLandscape ( 7, 9, Board.CellRight ) (getLandscapeCardAndRotate 15 1)
+            |> Board.setLandscape ( 15, 15, Board.CellLeft ) (getLandscapeCardAndRotate 7 2)
         )
 
 
@@ -69,13 +70,16 @@ newBoard =
 --   \ /     \ /
 --    .-------.
 
+renderMap = Render.render newBoard
+
+renderMapText = Render.renderMapToText renderMap
 
 view address model =
     div
         []
         [ pre
             []
-            [ text "    N\n   / \\\n  R   Y\n /     \\\nT-------N" ]
+            [ text renderMapText ]
         ]
 
 
