@@ -10,19 +10,23 @@ import Graphics.Element exposing (..)
 import Html.Events exposing (onClick)
 import Html.Attributes exposing (..)
 import Text
-import StartApp.Simple as StartApp
+import Keyboard
+import StartApp
+import Effects exposing (Never)
 import Cards exposing (..)
 import Board exposing (setCell)
 import Rules
 import Render
 
 
-main =
-    StartApp.start { model = model, view = view, update = update }
+type alias Model =
+    { boardX : Int
+    , boardY : Int
+    }
 
 
-model =
-    0
+init =
+    ( { boardX = 0, boardY = 0 }, Effects.none )
 
 
 board =
@@ -70,16 +74,21 @@ newBoard =
 --   \ /     \ /
 --    .-------.
 
-renderMap = Render.render newBoard
 
-renderMapText = Render.renderMapToText renderMap
+renderMap =
+    Render.render newBoard
+
+
+renderMapText =
+    Render.renderMapToText renderMap ( 0, 0 )
+
 
 view address model =
     div
         []
         [ pre
             []
-            [ text renderMapText ]
+            [ text (Render.renderMapToText renderMap ( model.boardX, model.boardY )) ]
         ]
 
 
@@ -105,14 +114,37 @@ landscapeStyle =
 
 
 type Action
-    = Increment
-    | Decrement
+    = Move Int Int
+    | NoOp
 
 
 update action model =
     case action of
-        Increment ->
-            model + 1
+        NoOp ->
+            ( model, Effects.none )
 
-        Decrement ->
-            model - 1
+        Move x y ->
+            ( { model
+                | boardX = model.boardX - x
+                , boardY = model.boardY + (Debug.log "y" y)
+              }
+            , Effects.none
+            )
+
+
+spaceToInc : { x : Int, y : Int } -> Action
+spaceToInc { x, y } =
+    Move x y
+
+
+app =
+    StartApp.start
+        { init = init
+        , view = view
+        , update = update
+        , inputs = [ Signal.map spaceToInc Keyboard.arrows ]
+        }
+
+
+main =
+    app.html

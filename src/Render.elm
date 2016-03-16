@@ -206,33 +206,33 @@ renderCharsSince colIndex char ( oldColIndex, str ) =
         ( colIndex, withEmptyChars ++ (String.fromChar char) )
 
 
-renderRow : RenderRow -> String
-renderRow row =
+renderRow : Int -> RenderRow -> String
+renderRow x row =
     let
         ( oldColIndex, str' ) =
-            Dict.filter (\colIndex _ -> colIndex >= 0) row
-                |> Dict.foldl renderCharsSince ( -1, "" )
+            Dict.filter (\colIndex _ -> colIndex >= x) row
+                |> Dict.foldl renderCharsSince ( x - 1, "" )
     in
         str'
 
 
-renderRowsSince : Int -> RenderRow -> ( Int, String ) -> ( Int, String )
-renderRowsSince rowIndex row ( oldRowIndex, str ) =
+renderRowsSince : Int -> Int -> RenderRow -> ( Int, String ) -> ( Int, String )
+renderRowsSince x rowIndex row ( oldRowIndex, str ) =
     let
         emptyLines = [oldRowIndex + 1..rowIndex - 1]
 
         withEmptyLines = List.foldl (\rowIndex str -> str ++ "\n") str emptyLines
     in
-        ( rowIndex, withEmptyLines ++ (renderRow row) ++ "\n" )
+        ( rowIndex, withEmptyLines ++ (renderRow x row) ++ "\n" )
 
 
-renderMapToText : RenderMap -> String
-renderMapToText renderMap =
+renderMapToText : RenderMap -> ( Int, Int ) -> String
+renderMapToText renderMap ( x, y ) =
     let
         str = ""
 
         ( oldRowIndex, str' ) =
-            Dict.filter (\rowIndex _ -> rowIndex >= 0) renderMap
-                |> Dict.foldl renderRowsSince ( -1, str )
+            Dict.filter (\rowIndex _ -> rowIndex >= y) renderMap
+                |> Dict.foldl (renderRowsSince x) ( y - 1, str )
     in
         str'
