@@ -11,6 +11,7 @@ import Html.Events exposing (onClick)
 import Html.Attributes exposing (..)
 import Text
 import Keyboard
+import Mouse
 import StartApp
 import Effects exposing (Never)
 import Cards exposing (..)
@@ -22,11 +23,22 @@ import Render
 type alias Model =
     { boardX : Int
     , boardY : Int
+    , mousePressed : Bool
+    , mousePressedInitialPos : ( Int, Int )
+    , mouseCurrentPos : ( Int, Int )
     }
 
 
 init =
-    ( { boardX = 0, boardY = 0 }, Effects.none )
+    ( { boardX = 0
+      , boardY = 0
+      , mousePressed = False
+      , mousePressedInitialPos = ( 0, 0 )
+      , mousePressedInitialBoard = ( 0, 0 )
+      , mouseCurrentPos = ( 0, 0 )
+      }
+    , Effects.none
+    )
 
 
 board =
@@ -85,9 +97,17 @@ renderMapText =
 
 view address model =
     div
-        []
+        [
+         style
+           [ ("overflow", "hidden")
+           ]
+        ]
         [ pre
-            []
+            [
+             style
+               [ ("overflow", "hidden")
+               ]
+            ]
             [ text (Render.renderMapToText renderMap ( model.boardX, model.boardY )) ]
         ]
 
@@ -115,7 +135,34 @@ landscapeStyle =
 
 type Action
     = Move Int Int
+    | MousePress Bool
+    | MouseMove ( Int, Int )
     | NoOp
+
+
+mouseMoveWhilePressed ( x, y ) model =
+    let
+        t = Debug.log "pouet" ( x, y )
+
+        model' = { model | mouseCurrentPos = ( x, y ) }
+
+        initialPos = model.mousePressedInitialPos
+
+        deltaX = (x - fst initialPos) // 10
+
+        deltaY = (y - snd initialPos) // 10
+    in
+        { model'
+            | boardX = fst model.mousePressedInitialBoard - (Debug.log "deltaX" deltaX)
+            , boardY = snd model.mousePressedInitialBoard - (Debug.log "deltaY" deltaY)
+        }
+
+
+mouseMove ( x, y ) model =
+    if model.mousePressed then
+        mouseMoveWhilePressed ( x, y ) model
+    else
+        { model | mouseCurrentPos = ( x, y ) }
 
 
 update action model =
@@ -126,7 +173,19 @@ update action model =
         Move x y ->
             ( { model
                 | boardX = model.boardX - x
-                , boardY = model.boardY + (Debug.log "y" y)
+                , boardY = model.boardY + y
+              }
+            , Effects.none
+            )
+
+        MouseMove pos ->
+            ( mouseMove pos model, Effects.none )
+
+        MousePress pressed ->
+            ( { model
+                | mousePressed = pressed
+                , mousePressedInitialPos = model.mouseCurrentPos
+                , mousePressedInitialBoard = ( model.boardX, model.boardY )
               }
             , Effects.none
             )
@@ -137,12 +196,32 @@ spaceToInc { x, y } =
     Move x y
 
 
+handleMouseDown : Bool -> Action
+handleMouseDown isDown =
+    MousePress isDown
+
+
+mouseMoveToAction : ( Int, Int ) -> Action
+mouseMoveToAction pos =
+    MouseMove pos
+
+
 app =
     StartApp.start
         { init = init
         , view = view
         , update = update
-        , inputs = [ Signal.map spaceToInc Keyboard.arrows ]
+        , inputs =
+            [ Signal.map
+                spaceToInc
+                Keyboard.wasd
+            , Signal.map
+                mouseMoveToAction
+                Mouse.position
+            , Signal.map
+                handleMouseDown
+                Mouse.isDown
+            ]
         }
 
 
