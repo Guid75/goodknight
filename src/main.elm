@@ -24,7 +24,6 @@ type alias Model =
     , mousePressed : Bool
     , mousePressedInitialPos : ( Int, Int )
     , mouseCurrentPos : ( Int, Int )
-    , board : Board
     }
 
 
