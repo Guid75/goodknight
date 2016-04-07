@@ -5,7 +5,7 @@ import Dict
 import Result
 import Html exposing (div, button, text, pre)
 import Graphics.Element exposing (..)
-import Html.Events exposing (onClick)
+import Html.Events exposing (onClick, onMouseDown, onMouseUp)
 import Html.Attributes exposing (..)
 import Text
 import Keyboard
@@ -48,14 +48,23 @@ init =
     )
 
 
-landscapeStyle : Html.Attribute
-landscapeStyle =
-    style
-        [ ( "overflow", "hidden" )
-        , ( "font-size", "12px" )
-        , ( "flex", "1" )
-        , ( "-webkit-user-select", "none" )
-        ]
+landscapeStyle : Bool -> Html.Attribute
+landscapeStyle mousePressed =
+    let
+        backgroundColor =
+            if mousePressed then
+                "#FFE0E0"
+            else
+                "#FFFFFF"
+    in
+        style
+            [ ( "overflow", "hidden" )
+            , ( "font-size", "12px" )
+            , ( "flex", "1" )
+            , ( "background-color", backgroundColor )
+            , ( "-webkit-user-select", "none" )
+            , ( "cursor", "move" )
+            ]
 
 
 dashboardStyle : Html.Attribute
@@ -86,7 +95,9 @@ view address model =
                 |> text
             ]
         , pre
-            [ landscapeStyle
+            [ onMouseDown address (MousePress True)
+            , onMouseUp address (MousePress False)
+            , landscapeStyle model.mousePressed
             ]
             [ model.board
                 |> Render.render
@@ -143,6 +154,14 @@ update action model =
         MouseMove pos ->
             ( mouseMove pos model, Effects.none )
 
+        -- MousePress pressed ->
+        --     ( { model
+        --         | mousePressed = pressed
+        --         , mousePressedInitialPos = model.mouseCurrentPos
+        --         , mousePressedInitialBoard = model.topLeft
+        --       }
+        --     , Effects.none
+        --     )
         MousePress pressed ->
             ( { model
                 | mousePressed = pressed
@@ -158,9 +177,10 @@ spaceToInc { x, y } =
     Move x y
 
 
-handleMouseDown : Bool -> Action
-handleMouseDown isDown =
-    MousePress isDown
+
+-- handleMouseDown : Bool -> Action
+-- handleMouseDown isDown =
+--     MousePress isDown
 
 
 mouseMoveToAction : ( Int, Int ) -> Action
@@ -180,9 +200,6 @@ app =
             , Signal.map
                 mouseMoveToAction
                 Mouse.position
-            , Signal.map
-                handleMouseDown
-                Mouse.isDown
             ]
         }
 
