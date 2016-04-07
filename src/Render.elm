@@ -40,6 +40,9 @@ landscapeToChar item =
         Cards.Horse ->
             'H'
 
+        Cards.CardBack ->
+            '?'
+
         _ ->
             ' '
 

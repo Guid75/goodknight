@@ -67,9 +67,10 @@ init =
 landscapeStyle : Html.Attribute
 landscapeStyle =
     style
-        [ ( "font-size", "15px" )
-        , ( "font-family", "monospace" )
-        , ( "text-align", "center" )
+        [ ( "overflow", "hidden" )
+        , ( "font-size", "12px" )
+        , ( "flex", "1" )
+        , ( "-webkit-user-select", "none" )
         ]
 
 
@@ -78,6 +79,9 @@ dashboardStyle =
     style
         [ ( "font-size", "12px" )
         , ( "font-family", "monospace" )
+        , ( "background-color", "#E0E0E0" )
+        , ( "-webkit-user-select", "none" )
+        , ( "width", "7em" )
         ]
 
 
@@ -91,18 +95,14 @@ view address model =
         ]
         [ pre
             [ dashboardStyle ]
-            [ Render.pokeLeftCell ( 0, 0 ) neutralCard Dict.empty
-                |> Render.pokeLeftCell ( 2, 0 ) neutralCard
-                |> Render.pokeLeftCell ( 4, 0 ) neutralCard
+            [ Render.pokeLeftCell ( 0, 1 ) backCard Dict.empty
+                |> Render.pokeLeftCell ( 1, 1 ) backCard
+                |> Render.pokeLeftCell ( 2, 1 ) backCard
                 |> Render.renderMapToText ( 0, 0 )
                 |> text
             ]
         , pre
-            [ style
-                [ ( "overflow", "hidden" )
-                , ( "font-size", "12px" )
-                , ( "flex", "1" )
-                ]
+            [ landscapeStyle
             ]
             [ model.board
                 |> Render.render
@@ -110,18 +110,6 @@ view address model =
                 |> text
             ]
         ]
-
-
-
--- div
---     []
---     (List.map (textToDiv landscapeStyle) (Array.toList initialLandscapeDeck))
-{- transform anything into an HTML div with just its textual representation -}
-
-
-textToDiv : Html.Attribute -> a -> Html.Html
-textToDiv attr a =
-    div [ attr ] [ (text << toString) a ]
 
 
 type Action

@@ -16,6 +16,7 @@ type LandscapeItem
     | Horse
     | Tournament
     | Cross Color
+    | CardBack
 
 
 type Challenge
@@ -55,10 +56,19 @@ allNeutral =
     ( Neutral, Neutral, Neutral )
 
 
+neutralCard : LandscapeCard
 neutralCard =
     { corners = allNeutral
     , edges = allNeutral
     , center = Neutral
+    }
+
+
+backCard : LandscapeCard
+backCard =
+    { corners = allNeutral
+    , edges = allNeutral
+    , center = CardBack
     }
 
 
