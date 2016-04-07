@@ -2,8 +2,6 @@ module Main (..) where
 
 import Debug
 import Dict
-import Array
-import Maybe
 import Result
 import Html exposing (div, button, text, pre)
 import Graphics.Element exposing (..)
@@ -28,19 +26,6 @@ type alias Model =
     , mouseCurrentPos : ( Int, Int )
     , board : Board
     }
-
-
-
--- b = Debug.log "ok" (Rules.isPossibleMove
---     (0, -1, Board.CellRight)
---     2  3  board)
--- b3 = Debug.log "ok3" (Rules.isPossibleMove
---                       (0, 1, Board.CellRight)
---                       2  0  board)
--- rotatedCard = Debug.log "ok" (Maybe.map (rotateLandscapeCard 0) (Array.get 0 initialLandscapeDeck))
-{-
-Init some random cards into a board
--}
 
 
 tmpInitBoard : Board -> Board
