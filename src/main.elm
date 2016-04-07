@@ -15,34 +15,19 @@ import Mouse
 import StartApp
 import Effects exposing (Never)
 import Cards exposing (..)
-import Board exposing (setCell)
+import Board exposing (setCell, Board)
 import Rules
 import Render
 
 
 type alias Model =
-    { boardX : Int
-    , boardY : Int
+    { board : Board
+    , topLeft : ( Int, Int )
     , mousePressed : Bool
     , mousePressedInitialPos : ( Int, Int )
     , mouseCurrentPos : ( Int, Int )
+    , board : Board
     }
-
-
-init =
-    ( { boardX = 0
-      , boardY = 0
-      , mousePressed = False
-      , mousePressedInitialPos = ( 0, 0 )
-      , mousePressedInitialBoard = ( 0, 0 )
-      , mouseCurrentPos = ( 0, 0 )
-      }
-    , Effects.none
-    )
-
-
-board =
-    Board.init Board.CellLeft
 
 
 
@@ -53,62 +38,77 @@ board =
 --                       (0, 1, Board.CellRight)
 --                       2  0  board)
 -- rotatedCard = Debug.log "ok" (Maybe.map (rotateLandscapeCard 0) (Array.get 0 initialLandscapeDeck))
+{-
+Init some random cards into a board
+-}
 
 
-newBoard =
-    Debug.log
-        "new board:"
-        (board
-            |> Board.setLandscape ( 1, 0, Board.CellLeft ) (getLandscapeCardAndRotate 3 0)
-            |> Board.setLandscape ( 0, 0, Board.CellRight ) (getLandscapeCardAndRotate 3 0)
-            |> Board.setLandscape ( 7, 9, Board.CellRight ) (getLandscapeCardAndRotate 15 1)
-            |> Board.setLandscape ( 15, 15, Board.CellLeft ) (getLandscapeCardAndRotate 7 2)
-        )
+tmpInitBoard : Board -> Board
+tmpInitBoard board =
+    board
+        |> Board.setLandscape ( 1, 0, Board.CellLeft ) (getLandscapeCardAndRotate 3 0)
+        |> Board.setLandscape ( 0, 0, Board.CellRight ) (getLandscapeCardAndRotate 3 0)
+        |> Board.setLandscape ( 7, 9, Board.CellRight ) (getLandscapeCardAndRotate 15 1)
+        |> Board.setLandscape ( 15, 15, Board.CellLeft ) (getLandscapeCardAndRotate 7 2)
 
 
-
--- b2 =
---     Debug.log
---         "ok2"
---         (Rules.isPossibleMove
---             ( 0, 0, Board.CellRight )
---             2
---             0
---             newBoard
---         )
---    .-------.
---   / \     /
---  R   Y   /
--- /     \ /
---T-------.-------.
--- \     / \     /
---  \   /   \   /
---   \ /     \ /
---    .-------.
+init =
+    ( { board = Board.init Board.CellLeft |> tmpInitBoard
+      , topLeft = ( 0, 0 )
+      , mousePressed = False
+      , mousePressedInitialPos = ( 0, 0 )
+      , mousePressedInitialBoard = ( 0, 0 )
+      , mouseCurrentPos = ( 0, 0 )
+      }
+    , Effects.none
+    )
 
 
-renderMap =
-    Render.render newBoard
+landscapeStyle : Html.Attribute
+landscapeStyle =
+    style
+        [ ( "font-size", "15px" )
+        , ( "font-family", "monospace" )
+        , ( "text-align", "center" )
+        ]
 
 
-renderMapText =
-    Render.renderMapToText renderMap ( 0, 0 )
+dashboardStyle : Html.Attribute
+dashboardStyle =
+    style
+        [ ( "font-size", "12px" )
+        , ( "font-family", "monospace" )
+        ]
 
 
 view address model =
     div
-        [
-         style
-           [ ("overflow", "hidden")
-           ]
+        [ style
+            [ ( "overflow", "hidden" )
+            , ( "display", "flex" )
+            , ( "flex-direction", "row" )
+            ]
         ]
         [ pre
-            [
-             style
-               [ ("overflow", "hidden")
-               ]
+            [ dashboardStyle ]
+            [ Render.pokeLeftCell ( 0, 0 ) neutralCard Dict.empty
+                |> Render.pokeLeftCell ( 2, 0 ) neutralCard
+                |> Render.pokeLeftCell ( 4, 0 ) neutralCard
+                |> Render.renderMapToText ( 0, 0 )
+                |> text
             ]
-            [ text (Render.renderMapToText renderMap ( model.boardX, model.boardY )) ]
+        , pre
+            [ style
+                [ ( "overflow", "hidden" )
+                , ( "font-size", "12px" )
+                , ( "flex", "1" )
+                ]
+            ]
+            [ model.board
+                |> Render.render
+                |> Render.renderMapToText model.topLeft
+                |> text
+            ]
         ]
 
 
@@ -124,15 +124,6 @@ textToDiv attr a =
     div [ attr ] [ (text << toString) a ]
 
 
-landscapeStyle : Html.Attribute
-landscapeStyle =
-    style
-        [ ( "font-size", "15px" )
-        , ( "font-family", "monospace" )
-        , ( "text-align", "center" )
-        ]
-
-
 type Action
     = Move Int Int
     | MousePress Bool
@@ -142,19 +133,19 @@ type Action
 
 mouseMoveWhilePressed ( x, y ) model =
     let
-        t = Debug.log "pouet" ( x, y )
-
         model' = { model | mouseCurrentPos = ( x, y ) }
 
         initialPos = model.mousePressedInitialPos
 
-        deltaX = (x - fst initialPos) // 10
+        deltaX = (x - fst initialPos) // 12
 
-        deltaY = (y - snd initialPos) // 10
+        deltaY = (y - snd initialPos) // 12
     in
         { model'
-            | boardX = fst model.mousePressedInitialBoard - (Debug.log "deltaX" deltaX)
-            , boardY = snd model.mousePressedInitialBoard - (Debug.log "deltaY" deltaY)
+            | topLeft =
+                ( fst model.mousePressedInitialBoard - deltaX
+                , snd model.mousePressedInitialBoard - deltaY
+                )
         }
 
 
@@ -172,8 +163,7 @@ update action model =
 
         Move x y ->
             ( { model
-                | boardX = model.boardX - x
-                , boardY = model.boardY + y
+                | topLeft = ( fst model.topLeft - x, snd model.topLeft + y )
               }
             , Effects.none
             )
@@ -185,7 +175,7 @@ update action model =
             ( { model
                 | mousePressed = pressed
                 , mousePressedInitialPos = model.mouseCurrentPos
-                , mousePressedInitialBoard = ( model.boardX, model.boardY )
+                , mousePressedInitialBoard = model.topLeft
               }
             , Effects.none
             )

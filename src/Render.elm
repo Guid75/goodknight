@@ -1,4 +1,4 @@
-module Render (render, renderMapToText) where
+module Render (render, renderMapToText, pokeLeftCell, pokeRightCell) where
 
 import Cards
 import Board
@@ -104,74 +104,102 @@ flatEdgeToChar item =
             '#'
 
 
+pokeLeftCell : ( Int, Int ) -> Cards.LandscapeCard -> RenderMap -> RenderMap
+pokeLeftCell ( row, col ) { corners, edges, center } renderMap =
+    let
+        ( corner0, corner1, corner2 ) = corners
+
+        ( edge0, edge1, edge2 ) = edges
+    in
+        renderPoke ( row, col + 4 ) (cornerToChar corner0) renderMap
+            |> renderPoke ( row + 4, col + 8 ) (cornerToChar corner1)
+            |> renderPoke ( row + 4, col ) (cornerToChar corner2)
+            |> renderPoke ( row + 1, col + 5 ) '\\'
+            |> renderPoke ( row + 2, col + 6 ) (edgeToChar False edge0)
+            |> renderPoke ( row + 3, col + 7 ) '\\'
+            |> renderPoke ( row + 1, col + 3 ) '/'
+            |> renderPoke ( row + 2, col + 2 ) (edgeToChar True edge2)
+            |> renderPoke ( row + 3, col + 1 ) '/'
+            |> renderPoke ( row + 4, col + 1 ) '-'
+            |> renderPoke ( row + 4, col + 2 ) '-'
+            |> renderPoke ( row + 4, col + 3 ) '-'
+            |> renderPoke ( row + 4, col + 4 ) (flatEdgeToChar edge1)
+            |> renderPoke ( row + 4, col + 5 ) '-'
+            |> renderPoke ( row + 4, col + 6 ) '-'
+            |> renderPoke ( row + 4, col + 7 ) '-'
+            |> renderPoke ( row + 2, col + 4 ) (landscapeToChar center)
+            |> renderPoke ( row + 1, col + 4 ) ' '
+            |> renderPoke ( row + 2, col + 3 ) ' '
+            |> renderPoke ( row + 2, col + 5 ) ' '
+            |> renderPoke ( row + 3, col + 2 ) ' '
+            |> renderPoke ( row + 3, col + 3 ) ' '
+            |> renderPoke ( row + 3, col + 4 ) ' '
+            |> renderPoke ( row + 3, col + 5 ) ' '
+            |> renderPoke ( row + 3, col + 6 ) ' '
+
+
 renderLeftCell : ( Int, Int ) -> Maybe Cards.LandscapeCard -> RenderMap -> RenderMap
 renderLeftCell ( x, y ) maybeCard renderMap =
+    case maybeCard of
+        Nothing ->
+            renderMap
+
+        Just card ->
+            let
+                row = y * 4
+
+                col = x * 8 - (y * 4)
+            in
+                pokeLeftCell ( row, col ) card renderMap
+
+
+pokeRightCell : ( Int, Int ) -> Cards.LandscapeCard -> RenderMap -> RenderMap
+pokeRightCell ( row, col ) { corners, edges, center } renderMap =
     let
-        toAbsoluteCoord row col =
-            ( row + y * 4, col + x * 8 - (y * 4) )
+        ( corner0, corner1, corner2 ) = corners
+
+        ( edge0, edge1, edge2 ) = edges
     in
-        case maybeCard of
-            Nothing ->
-                renderMap
-
-            Just { corners, edges, center } ->
-                let
-                    ( corner0, corner1, corner2 ) = corners
-
-                    ( edge0, edge1, edge2 ) = edges
-                in
-                    renderPoke (toAbsoluteCoord 0 4) (cornerToChar corner0) renderMap
-                        |> renderPoke (toAbsoluteCoord 4 8) (cornerToChar corner1)
-                        |> renderPoke (toAbsoluteCoord 4 0) (cornerToChar corner2)
-                        |> renderPoke (toAbsoluteCoord 1 5) '\\'
-                        |> renderPoke (toAbsoluteCoord 2 6) (edgeToChar False edge0)
-                        |> renderPoke (toAbsoluteCoord 3 7) '\\'
-                        |> renderPoke (toAbsoluteCoord 1 3) '/'
-                        |> renderPoke (toAbsoluteCoord 2 2) (edgeToChar True edge2)
-                        |> renderPoke (toAbsoluteCoord 3 1) '/'
-                        |> renderPoke (toAbsoluteCoord 4 1) '-'
-                        |> renderPoke (toAbsoluteCoord 4 2) '-'
-                        |> renderPoke (toAbsoluteCoord 4 3) '-'
-                        |> renderPoke (toAbsoluteCoord 4 4) (flatEdgeToChar edge1)
-                        |> renderPoke (toAbsoluteCoord 4 5) '-'
-                        |> renderPoke (toAbsoluteCoord 4 6) '-'
-                        |> renderPoke (toAbsoluteCoord 4 7) '-'
-                        |> renderPoke (toAbsoluteCoord 2 4) (landscapeToChar center)
+        renderPoke ( row, 8 ) (cornerToChar corner0) renderMap
+            |> renderPoke ( row + 4, col + 4 ) (cornerToChar corner1)
+            |> renderPoke ( row, col ) (cornerToChar corner2)
+            |> renderPoke ( row + 1, col + 7 ) '/'
+            |> renderPoke ( row + 2, col + 6 ) (edgeToChar True edge0)
+            |> renderPoke ( row + 3, col + 5 ) '/'
+            |> renderPoke ( row + 3, col + 3 ) '\\'
+            |> renderPoke ( row + 2, col + 2 ) (edgeToChar False edge1)
+            |> renderPoke ( row + 1, col + 1 ) '\\'
+            |> renderPoke ( row, col + 1 ) '-'
+            |> renderPoke ( row, col + 2 ) '-'
+            |> renderPoke ( row, col + 3 ) '-'
+            |> renderPoke ( row, col + 4 ) (flatEdgeToChar edge2)
+            |> renderPoke ( row, col + 5 ) '-'
+            |> renderPoke ( row, col + 6 ) '-'
+            |> renderPoke ( row, col + 7 ) '-'
+            |> renderPoke ( row + 2, col + 4 ) (landscapeToChar center)
+            |> renderPoke ( row + 1, col + 2 ) ' '
+            |> renderPoke ( row + 1, col + 3 ) ' '
+            |> renderPoke ( row + 1, col + 4 ) ' '
+            |> renderPoke ( row + 1, col + 5 ) ' '
+            |> renderPoke ( row + 1, col + 6 ) ' '
+            |> renderPoke ( row + 2, col + 3 ) ' '
+            |> renderPoke ( row + 2, col + 5 ) ' '
+            |> renderPoke ( row + 3, col + 4 ) ' '
 
 
 renderRightCell : ( Int, Int ) -> Maybe Cards.LandscapeCard -> RenderMap -> RenderMap
 renderRightCell ( x, y ) maybeCard renderMap =
-    let
-        toAbsoluteCoord row col =
-            ( row + y * 4, col + x * 8 - (y * 4) + 4 )
-    in
-        case maybeCard of
-            Nothing ->
-                renderMap
+    case maybeCard of
+        Nothing ->
+            renderMap
 
-            Just { corners, edges, center } ->
-                let
-                    ( corner0, corner1, corner2 ) = corners
+        Just card ->
+            let
+                row = y * 4
 
-                    ( edge0, edge1, edge2 ) = edges
-                in
-                    renderPoke (toAbsoluteCoord 0 8) (cornerToChar corner0) renderMap
-                        |> renderPoke (toAbsoluteCoord 4 4) (cornerToChar corner1)
-                        |> renderPoke (toAbsoluteCoord 0 0) (cornerToChar corner2)
-                        |> renderPoke (toAbsoluteCoord 1 7) '/'
-                        |> renderPoke (toAbsoluteCoord 2 6) (edgeToChar True edge0)
-                        |> renderPoke (toAbsoluteCoord 3 5) '/'
-                        |> renderPoke (toAbsoluteCoord 3 3) '\\'
-                        |> renderPoke (toAbsoluteCoord 2 2) (edgeToChar False edge1)
-                        |> renderPoke (toAbsoluteCoord 1 1) '\\'
-                        |> renderPoke (toAbsoluteCoord 0 1) '-'
-                        |> renderPoke (toAbsoluteCoord 0 2) '-'
-                        |> renderPoke (toAbsoluteCoord 0 3) '-'
-                        |> renderPoke (toAbsoluteCoord 0 4) (flatEdgeToChar edge2)
-                        |> renderPoke (toAbsoluteCoord 0 5) '-'
-                        |> renderPoke (toAbsoluteCoord 0 6) '-'
-                        |> renderPoke (toAbsoluteCoord 0 7) '-'
-                        |> renderPoke (toAbsoluteCoord 2 4) (landscapeToChar center)
+                col = x * 8 - (y * 4) + 4
+            in
+                pokeRightCell ( row, col ) card renderMap
 
 
 renderCell : Board.CellCoordinates -> Board.CellBinome Cards.LandscapeCard -> RenderMap -> RenderMap
@@ -226,8 +254,8 @@ renderRowsSince x rowIndex row ( oldRowIndex, str ) =
         ( rowIndex, withEmptyLines ++ (renderRow x row) ++ "\n" )
 
 
-renderMapToText : RenderMap -> ( Int, Int ) -> String
-renderMapToText renderMap ( x, y ) =
+renderMapToText : ( Int, Int ) -> RenderMap -> String
+renderMapToText ( x, y ) renderMap =
     let
         str = ""
 
