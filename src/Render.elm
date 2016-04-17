@@ -19,6 +19,11 @@ type alias RenderPixel =
     }
 
 
+blackPixel : Char -> RenderPixel
+blackPixel c =
+    { char = c, color = Color.black }
+
+
 type alias RenderRow =
     Dict Int RenderPixel
 
@@ -90,35 +95,55 @@ colorToChar color =
             'G'
 
 
-edgeToChar : Bool -> Cards.LandscapeItem -> Char
-edgeToChar mounting item =
+colorToElmColor : Cards.Color -> Color
+colorToElmColor c =
+    case c of
+        Cards.Red ->
+            Color.red
+
+        Cards.Yellow ->
+            Color.yellow
+
+        Cards.Blue ->
+            Color.blue
+
+        Cards.Green ->
+            Color.green
+
+
+edgeToPixel : Bool -> Cards.LandscapeItem -> RenderPixel
+edgeToPixel mounting item =
     case item of
         Cards.Neutral ->
             case mounting of
                 True ->
-                    '/'
+                    blackPixel '/'
 
                 False ->
-                    '\\'
+                    blackPixel '\\'
 
         Cards.Cross color ->
-            colorToChar color
+            { char = colorToChar color
+            , color = colorToElmColor color
+            }
 
         _ ->
-            '#'
+            blackPixel '#'
 
 
-flatEdgeToChar : Cards.LandscapeItem -> Char
-flatEdgeToChar item =
+flatEdgeToPixel : Cards.LandscapeItem -> RenderPixel
+flatEdgeToPixel item =
     case item of
         Cards.Neutral ->
-            '-'
+            blackPixel '-'
 
         Cards.Cross color ->
-            colorToChar color
+            { char = colorToChar color
+            , color = colorToElmColor color
+            }
 
         _ ->
-            '#'
+            blackPixel '#'
 
 
 pokeLeftCell : ( Int, Int ) -> Cards.LandscapeCard -> RenderMap -> RenderMap
@@ -133,15 +158,15 @@ pokeLeftCell ( row, col ) card renderMap =
             |> pokeMonoPixel ( row + 4, col + 8 ) (cornerToChar corner1)
             |> pokeMonoPixel ( row + 4, col ) (cornerToChar corner2)
             |> pokeMonoPixel ( row + 1, col + 5 ) '\\'
-            |> pokePixel ( row + 2, col + 6 ) { char = (edgeToChar False edge0), color = Color.green }
+            |> pokePixel ( row + 2, col + 6 ) (edgeToPixel False edge0)
             |> pokeMonoPixel ( row + 3, col + 7 ) '\\'
             |> pokeMonoPixel ( row + 1, col + 3 ) '/'
-            |> pokePixel ( row + 2, col + 2 ) { char = (edgeToChar True edge2), color = Color.blue }
+            |> pokePixel ( row + 2, col + 2 ) (edgeToPixel True edge2)
             |> pokeMonoPixel ( row + 3, col + 1 ) '/'
             |> pokeMonoPixel ( row + 4, col + 1 ) '-'
             |> pokeMonoPixel ( row + 4, col + 2 ) '-'
             |> pokeMonoPixel ( row + 4, col + 3 ) '-'
-            |> pokePixel ( row + 4, col + 4 ) { char = (flatEdgeToChar edge1), color = Color.red }
+            |> pokePixel ( row + 4, col + 4 ) (flatEdgeToPixel edge1)
             |> pokeMonoPixel ( row + 4, col + 5 ) '-'
             |> pokeMonoPixel ( row + 4, col + 6 ) '-'
             |> pokeMonoPixel ( row + 4, col + 7 ) '-'
@@ -179,19 +204,19 @@ pokeRightCell ( row, col ) card renderMap =
         ( edge0, edge1, edge2 ) = card.edges
     in
         renderMap
-            |> pokeMonoPixel ( row, 8 ) (cornerToChar corner0)
+            |> pokeMonoPixel ( row, col + 8 ) (cornerToChar corner0)
             |> pokeMonoPixel ( row + 4, col + 4 ) (cornerToChar corner1)
             |> pokeMonoPixel ( row, col ) (cornerToChar corner2)
             |> pokeMonoPixel ( row + 1, col + 7 ) '/'
-            |> pokeMonoPixel ( row + 2, col + 6 ) (edgeToChar True edge0)
+            |> pokePixel ( row + 2, col + 6 ) (edgeToPixel True edge0)
             |> pokeMonoPixel ( row + 3, col + 5 ) '/'
             |> pokeMonoPixel ( row + 3, col + 3 ) '\\'
-            |> pokeMonoPixel ( row + 2, col + 2 ) (edgeToChar False edge1)
+            |> pokePixel ( row + 2, col + 2 ) (edgeToPixel False edge1)
             |> pokeMonoPixel ( row + 1, col + 1 ) '\\'
             |> pokeMonoPixel ( row, col + 1 ) '-'
             |> pokeMonoPixel ( row, col + 2 ) '-'
             |> pokeMonoPixel ( row, col + 3 ) '-'
-            |> pokeMonoPixel ( row, col + 4 ) (flatEdgeToChar edge2)
+            |> pokePixel ( row, col + 4 ) (flatEdgeToPixel edge2)
             |> pokeMonoPixel ( row, col + 5 ) '-'
             |> pokeMonoPixel ( row, col + 6 ) '-'
             |> pokeMonoPixel ( row, col + 7 ) '-'
