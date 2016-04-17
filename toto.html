@@ -1,6 +1,6 @@
 <html>
   <head>
-    <title>Embedding Elm in HTML!</title>
+    <title>Good Knight!</title>
     <script type="text/javascript" src="elm.js"></script>
   </head>
 
@@ -35,6 +35,7 @@
            range = document.caretRangeFromPoint(x, y);
            textNode = range.startContainer;
            offset = range.startOffset - 1;
+/*           console.log("=>", range.commonAncestorContainer);*/
            console.log(offsetToPos(offset, textNode.textContent));
         }
     }

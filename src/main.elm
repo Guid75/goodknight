@@ -30,8 +30,8 @@ type alias Model =
 tmpInitBoard : Board -> Board
 tmpInitBoard board =
     board
-        |> Board.setLandscape ( 1, 0, Board.CellLeft ) (getLandscapeCardAndRotate 3 0)
-        |> Board.setLandscape ( 1, 0, Board.CellRight ) (getLandscapeCardAndRotate 3 0)
+        |> Board.setLandscape ( 2, 0, Board.CellLeft ) (getLandscapeCardAndRotate 3 0)
+        |> Board.setLandscape ( 2, 0, Board.CellRight ) (getLandscapeCardAndRotate 3 0)
         |> Board.setLandscape ( 7, 9, Board.CellRight ) (getLandscapeCardAndRotate 15 1)
         |> Board.setLandscape ( 15, 15, Board.CellLeft ) (getLandscapeCardAndRotate 7 2)
 
@@ -104,8 +104,9 @@ view address model =
             , landscapeStyle model.mousePressed
             ]
             (model.board
-              |> Render.render
-              |> Render.renderMapToHtml model.topLeft)
+                |> Render.render
+                |> Render.renderMapToHtml model.topLeft
+            )
         ]
 
 

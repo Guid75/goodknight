@@ -13,26 +13,26 @@ import Html.Attributes exposing (..)
 -- indexed by rows, then by columns
 
 
-type alias RenderPixel =
+type alias Pixel =
     { char : Char
     , color : Color
     }
 
 
-blackPixel : Char -> RenderPixel
+blackPixel : Char -> Pixel
 blackPixel c =
     { char = c, color = Color.black }
 
 
 type alias RenderRow =
-    Dict Int RenderPixel
+    Dict Int Pixel
 
 
 type alias RenderMap =
     Dict Int RenderRow
 
 
-pokePixel : ( Int, Int ) -> RenderPixel -> RenderMap -> RenderMap
+pokePixel : ( Int, Int ) -> Pixel -> RenderMap -> RenderMap
 pokePixel ( row, col ) pixel renderMap =
     let
         maybeRow = Dict.get row renderMap
@@ -47,36 +47,36 @@ pokePixel ( row, col ) pixel renderMap =
 
 pokeMonoPixel : ( Int, Int ) -> Char -> RenderMap -> RenderMap
 pokeMonoPixel pos c renderMap =
-    pokePixel pos { char = c, color = Color.black } renderMap
+    pokePixel pos (blackPixel c) renderMap
 
 
-landscapeToChar : Cards.LandscapeItem -> Char
-landscapeToChar item =
+landscapeToPixel : Cards.LandscapeItem -> Pixel
+landscapeToPixel item =
     case item of
         Cards.Castle ->
-            'C'
+            blackPixel 'C'
 
         Cards.Horse ->
-            'H'
+            blackPixel 'H'
 
         Cards.CardBack ->
-            '?'
+            blackPixel '?'
 
         _ ->
-            ' '
+            blackPixel ' '
 
 
-cornerToChar : Cards.LandscapeItem -> Char
-cornerToChar item =
+cornerToPixel : Cards.LandscapeItem -> Pixel
+cornerToPixel item =
     case item of
         Cards.Neutral ->
-            '.'
+            blackPixel '.'
 
         Cards.Tournament ->
-            'T'
+            { char = 'T', color = Color.purple }
 
         _ ->
-            '#'
+            blackPixel '#'
 
 
 colorToChar : Cards.Color -> Char
@@ -111,7 +111,7 @@ colorToElmColor c =
             Color.green
 
 
-edgeToPixel : Bool -> Cards.LandscapeItem -> RenderPixel
+edgeToPixel : Bool -> Cards.LandscapeItem -> Pixel
 edgeToPixel mounting item =
     case item of
         Cards.Neutral ->
@@ -131,7 +131,7 @@ edgeToPixel mounting item =
             blackPixel '#'
 
 
-flatEdgeToPixel : Cards.LandscapeItem -> RenderPixel
+flatEdgeToPixel : Cards.LandscapeItem -> Pixel
 flatEdgeToPixel item =
     case item of
         Cards.Neutral ->
@@ -154,9 +154,9 @@ pokeLeftCell ( row, col ) card renderMap =
         ( edge0, edge1, edge2 ) = card.edges
     in
         renderMap
-            |> pokeMonoPixel ( row, col + 4 ) (cornerToChar corner0)
-            |> pokeMonoPixel ( row + 4, col + 8 ) (cornerToChar corner1)
-            |> pokeMonoPixel ( row + 4, col ) (cornerToChar corner2)
+            |> pokePixel ( row, col + 4 ) (cornerToPixel corner0)
+            |> pokePixel ( row + 4, col + 8 ) (cornerToPixel corner1)
+            |> pokePixel ( row + 4, col ) (cornerToPixel corner2)
             |> pokeMonoPixel ( row + 1, col + 5 ) '\\'
             |> pokePixel ( row + 2, col + 6 ) (edgeToPixel False edge0)
             |> pokeMonoPixel ( row + 3, col + 7 ) '\\'
@@ -170,7 +170,7 @@ pokeLeftCell ( row, col ) card renderMap =
             |> pokeMonoPixel ( row + 4, col + 5 ) '-'
             |> pokeMonoPixel ( row + 4, col + 6 ) '-'
             |> pokeMonoPixel ( row + 4, col + 7 ) '-'
-            |> pokePixel ( row + 2, col + 4 ) { char = (landscapeToChar card.center), color = Color.red }
+            |> pokePixel ( row + 2, col + 4 ) (landscapeToPixel card.center)
             |> pokeMonoPixel ( row + 1, col + 4 ) ' '
             |> pokeMonoPixel ( row + 2, col + 3 ) ' '
             |> pokeMonoPixel ( row + 2, col + 5 ) ' '
@@ -204,9 +204,9 @@ pokeRightCell ( row, col ) card renderMap =
         ( edge0, edge1, edge2 ) = card.edges
     in
         renderMap
-            |> pokeMonoPixel ( row, col + 8 ) (cornerToChar corner0)
-            |> pokeMonoPixel ( row + 4, col + 4 ) (cornerToChar corner1)
-            |> pokeMonoPixel ( row, col ) (cornerToChar corner2)
+            |> pokePixel ( row, col + 8 ) (cornerToPixel corner0)
+            |> pokePixel ( row + 4, col + 4 ) (cornerToPixel corner1)
+            |> pokePixel ( row, col ) (cornerToPixel corner2)
             |> pokeMonoPixel ( row + 1, col + 7 ) '/'
             |> pokePixel ( row + 2, col + 6 ) (edgeToPixel True edge0)
             |> pokeMonoPixel ( row + 3, col + 5 ) '/'
@@ -220,7 +220,7 @@ pokeRightCell ( row, col ) card renderMap =
             |> pokeMonoPixel ( row, col + 5 ) '-'
             |> pokeMonoPixel ( row, col + 6 ) '-'
             |> pokeMonoPixel ( row, col + 7 ) '-'
-            |> pokeMonoPixel ( row + 2, col + 4 ) (landscapeToChar card.center)
+            |> pokePixel ( row + 2, col + 4 ) (landscapeToPixel card.center)
             |> pokeMonoPixel ( row + 1, col + 2 ) ' '
             |> pokeMonoPixel ( row + 1, col + 3 ) ' '
             |> pokeMonoPixel ( row + 1, col + 4 ) ' '
@@ -275,64 +275,72 @@ crHtml =
     text "\n"
 
 
-renderPixelsSince : Int -> RenderPixel -> ( Int, List Html ) -> ( Int, List Html )
+colorToCss : Color -> String
+colorToCss color =
+    let
+        rgb = Color.toRgb color
+    in
+        "rgb("
+            ++ (toString rgb.red)
+            ++ ","
+            ++ (toString rgb.green)
+            ++ ","
+            ++ (toString rgb.blue)
+            ++ ")"
+
+
+pixelToSpan : Pixel -> Html
+pixelToSpan pixel =
+    span
+        [ style
+            [ ( "color", colorToCss pixel.color )
+            ]
+        ]
+        [ text (String.fromChar pixel.char) ]
+
+
+renderPixelsSince : Int -> Pixel -> ( Int, List Html ) -> ( Int, List Html )
 renderPixelsSince colIndex pixel ( oldColIndex, renderItems ) =
     let
         emptyPixelsCount = colIndex - oldColIndex - 1
 
-        emptyPixels = List.repeat emptyPixelsCount (text " ")
-
-        colors = Color.toRgb pixel.color
+        emptyPixels = text (String.repeat emptyPixelsCount " ")
     in
         ( colIndex
         , List.concat
             [ renderItems
-            , emptyPixels
-            , [ span
-                    [ style
-                        [ ( "color"
-                          , "rgb("
-                                ++ (toString colors.red)
-                                ++ ","
-                                ++ (toString colors.green)
-                                ++ ","
-                                ++ (toString colors.blue)
-                                ++ ")"
-                          )
-                        ]
-                    ]
-                    [ text (String.fromChar pixel.char) ]
-              ]
+            , [ emptyPixels ]
+            , [ pixelToSpan pixel ]
             ]
         )
 
 
 renderRow : Int -> RenderRow -> List Html
-renderRow x row =
+renderRow left row =
     let
         ( _, renderItems ) =
-            Dict.filter (\colIndex _ -> colIndex >= x) row
-                |> Dict.foldl renderPixelsSince ( x - 1, [] )
+            Dict.filter (\colIndex _ -> colIndex >= left) row
+                |> Dict.foldl renderPixelsSince ( left - 1, [] )
     in
         List.concat [ renderItems, [ crHtml ] ]
 
 
 renderRowsSince : Int -> Int -> RenderRow -> ( Int, List Html ) -> ( Int, List Html )
-renderRowsSince x rowIndex row ( oldRowIndex, renderItems ) =
+renderRowsSince left rowIndex row ( oldRowIndex, renderItems ) =
     let
         emptyLinesCount = rowIndex - oldRowIndex - 1
 
         emptyLines = List.repeat emptyLinesCount crHtml
     in
-        ( rowIndex, List.concat [ renderItems, emptyLines, (renderRow x row) ] )
+        ( rowIndex, List.concat [ renderItems, emptyLines, (renderRow left row) ] )
 
 
 renderMapToHtml : ( Int, Int ) -> RenderMap -> List Html
-renderMapToHtml ( x, y ) renderMap =
+renderMapToHtml ( left, top ) renderMap =
     let
         ( oldRowIndex, renderItems ) =
-            Dict.filter (\rowIndex _ -> rowIndex >= y) renderMap
-                |> Dict.foldl (renderRowsSince x) ( y - 1, [] )
+            Dict.filter (\rowIndex _ -> rowIndex >= top) renderMap
+                |> Dict.foldl (renderRowsSince left) ( top - 1, [] )
     in
         renderItems
 
