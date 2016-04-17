@@ -1,0 +1,43 @@
+<html>
+  <head>
+    <title>Embedding Elm in HTML!</title>
+    <script type="text/javascript" src="elm.js"></script>
+  </head>
+
+  <body style="margin: 0 0 0 0;">
+    <div id="main" style="width:100%; height:100%"></div>
+  </body>
+
+  <script type="text/javascript">
+    var stamperDiv = document.getElementById('main');
+    var myapp = Elm.embed(Elm.Main, stamperDiv);
+    myapp.ports.requestOffset.subscribe(requestOffset);
+
+   function offsetToPos(offset, text) {
+       var y = 0;
+       var x = -1;
+       for (i = 0; i <= offset; i++) {
+           if (text[i] === '\n') {
+               x = -1;
+               y++;
+           } else {
+               x++;
+           }
+       }
+       return [x, y];
+   }
+
+   function requestOffset(pos) {
+       var x = pos[0];
+       var y = pos[1];
+
+       if (document.caretRangeFromPoint) {
+           range = document.caretRangeFromPoint(x, y);
+           textNode = range.startContainer;
+           offset = range.startOffset - 1;
+           console.log(offsetToPos(offset, textNode.textContent));
+        }
+    }
+
+  </script>
+</html>

@@ -1,34 +1,48 @@
-module Render (render, renderMapToText, pokeLeftCell, pokeRightCell) where
+module Render (render, renderMapToHtml, pokeLeftCell, pokeRightCell) where
 
 import Cards
 import Board
 import List
 import String
 import Dict exposing (Dict)
+import Color exposing (Color)
+import Html exposing (Html, text, span, pre)
+import Html.Attributes exposing (..)
 
 
 -- indexed by rows, then by columns
 
 
+type alias RenderPixel =
+    { char : Char
+    , color : Color
+    }
+
+
 type alias RenderRow =
-    Dict Int Char
+    Dict Int RenderPixel
 
 
 type alias RenderMap =
     Dict Int RenderRow
 
 
-renderPoke : ( Int, Int ) -> Char -> RenderMap -> RenderMap
-renderPoke ( row, col ) c renderMap =
+pokePixel : ( Int, Int ) -> RenderPixel -> RenderMap -> RenderMap
+pokePixel ( row, col ) pixel renderMap =
     let
         maybeRow = Dict.get row renderMap
     in
         case maybeRow of
             Just rowMap ->
-                Dict.insert row (Dict.insert col c rowMap) renderMap
+                Dict.insert row (Dict.insert col pixel rowMap) renderMap
 
             Nothing ->
-                Dict.insert row (Dict.singleton col c) renderMap
+                Dict.insert row (Dict.singleton col pixel) renderMap
+
+
+pokeMonoPixel : ( Int, Int ) -> Char -> RenderMap -> RenderMap
+pokeMonoPixel pos c renderMap =
+    pokePixel pos { char = c, color = Color.black } renderMap
 
 
 landscapeToChar : Cards.LandscapeItem -> Char
@@ -108,37 +122,38 @@ flatEdgeToChar item =
 
 
 pokeLeftCell : ( Int, Int ) -> Cards.LandscapeCard -> RenderMap -> RenderMap
-pokeLeftCell ( row, col ) { corners, edges, center } renderMap =
+pokeLeftCell ( row, col ) card renderMap =
     let
-        ( corner0, corner1, corner2 ) = corners
+        ( corner0, corner1, corner2 ) = card.corners
 
-        ( edge0, edge1, edge2 ) = edges
+        ( edge0, edge1, edge2 ) = card.edges
     in
-        renderPoke ( row, col + 4 ) (cornerToChar corner0) renderMap
-            |> renderPoke ( row + 4, col + 8 ) (cornerToChar corner1)
-            |> renderPoke ( row + 4, col ) (cornerToChar corner2)
-            |> renderPoke ( row + 1, col + 5 ) '\\'
-            |> renderPoke ( row + 2, col + 6 ) (edgeToChar False edge0)
-            |> renderPoke ( row + 3, col + 7 ) '\\'
-            |> renderPoke ( row + 1, col + 3 ) '/'
-            |> renderPoke ( row + 2, col + 2 ) (edgeToChar True edge2)
-            |> renderPoke ( row + 3, col + 1 ) '/'
-            |> renderPoke ( row + 4, col + 1 ) '-'
-            |> renderPoke ( row + 4, col + 2 ) '-'
-            |> renderPoke ( row + 4, col + 3 ) '-'
-            |> renderPoke ( row + 4, col + 4 ) (flatEdgeToChar edge1)
-            |> renderPoke ( row + 4, col + 5 ) '-'
-            |> renderPoke ( row + 4, col + 6 ) '-'
-            |> renderPoke ( row + 4, col + 7 ) '-'
-            |> renderPoke ( row + 2, col + 4 ) (landscapeToChar center)
-            |> renderPoke ( row + 1, col + 4 ) ' '
-            |> renderPoke ( row + 2, col + 3 ) ' '
-            |> renderPoke ( row + 2, col + 5 ) ' '
-            |> renderPoke ( row + 3, col + 2 ) ' '
-            |> renderPoke ( row + 3, col + 3 ) ' '
-            |> renderPoke ( row + 3, col + 4 ) ' '
-            |> renderPoke ( row + 3, col + 5 ) ' '
-            |> renderPoke ( row + 3, col + 6 ) ' '
+        renderMap
+            |> pokeMonoPixel ( row, col + 4 ) (cornerToChar corner0)
+            |> pokeMonoPixel ( row + 4, col + 8 ) (cornerToChar corner1)
+            |> pokeMonoPixel ( row + 4, col ) (cornerToChar corner2)
+            |> pokeMonoPixel ( row + 1, col + 5 ) '\\'
+            |> pokePixel ( row + 2, col + 6 ) { char = (edgeToChar False edge0), color = Color.green }
+            |> pokeMonoPixel ( row + 3, col + 7 ) '\\'
+            |> pokeMonoPixel ( row + 1, col + 3 ) '/'
+            |> pokePixel ( row + 2, col + 2 ) { char = (edgeToChar True edge2), color = Color.blue }
+            |> pokeMonoPixel ( row + 3, col + 1 ) '/'
+            |> pokeMonoPixel ( row + 4, col + 1 ) '-'
+            |> pokeMonoPixel ( row + 4, col + 2 ) '-'
+            |> pokeMonoPixel ( row + 4, col + 3 ) '-'
+            |> pokePixel ( row + 4, col + 4 ) { char = (flatEdgeToChar edge1), color = Color.red }
+            |> pokeMonoPixel ( row + 4, col + 5 ) '-'
+            |> pokeMonoPixel ( row + 4, col + 6 ) '-'
+            |> pokeMonoPixel ( row + 4, col + 7 ) '-'
+            |> pokePixel ( row + 2, col + 4 ) { char = (landscapeToChar card.center), color = Color.red }
+            |> pokeMonoPixel ( row + 1, col + 4 ) ' '
+            |> pokeMonoPixel ( row + 2, col + 3 ) ' '
+            |> pokeMonoPixel ( row + 2, col + 5 ) ' '
+            |> pokeMonoPixel ( row + 3, col + 2 ) ' '
+            |> pokeMonoPixel ( row + 3, col + 3 ) ' '
+            |> pokeMonoPixel ( row + 3, col + 4 ) ' '
+            |> pokeMonoPixel ( row + 3, col + 5 ) ' '
+            |> pokeMonoPixel ( row + 3, col + 6 ) ' '
 
 
 renderLeftCell : ( Int, Int ) -> Maybe Cards.LandscapeCard -> RenderMap -> RenderMap
@@ -157,37 +172,38 @@ renderLeftCell ( x, y ) maybeCard renderMap =
 
 
 pokeRightCell : ( Int, Int ) -> Cards.LandscapeCard -> RenderMap -> RenderMap
-pokeRightCell ( row, col ) { corners, edges, center } renderMap =
+pokeRightCell ( row, col ) card renderMap =
     let
-        ( corner0, corner1, corner2 ) = corners
+        ( corner0, corner1, corner2 ) = card.corners
 
-        ( edge0, edge1, edge2 ) = edges
+        ( edge0, edge1, edge2 ) = card.edges
     in
-        renderPoke ( row, 8 ) (cornerToChar corner0) renderMap
-            |> renderPoke ( row + 4, col + 4 ) (cornerToChar corner1)
-            |> renderPoke ( row, col ) (cornerToChar corner2)
-            |> renderPoke ( row + 1, col + 7 ) '/'
-            |> renderPoke ( row + 2, col + 6 ) (edgeToChar True edge0)
-            |> renderPoke ( row + 3, col + 5 ) '/'
-            |> renderPoke ( row + 3, col + 3 ) '\\'
-            |> renderPoke ( row + 2, col + 2 ) (edgeToChar False edge1)
-            |> renderPoke ( row + 1, col + 1 ) '\\'
-            |> renderPoke ( row, col + 1 ) '-'
-            |> renderPoke ( row, col + 2 ) '-'
-            |> renderPoke ( row, col + 3 ) '-'
-            |> renderPoke ( row, col + 4 ) (flatEdgeToChar edge2)
-            |> renderPoke ( row, col + 5 ) '-'
-            |> renderPoke ( row, col + 6 ) '-'
-            |> renderPoke ( row, col + 7 ) '-'
-            |> renderPoke ( row + 2, col + 4 ) (landscapeToChar center)
-            |> renderPoke ( row + 1, col + 2 ) ' '
-            |> renderPoke ( row + 1, col + 3 ) ' '
-            |> renderPoke ( row + 1, col + 4 ) ' '
-            |> renderPoke ( row + 1, col + 5 ) ' '
-            |> renderPoke ( row + 1, col + 6 ) ' '
-            |> renderPoke ( row + 2, col + 3 ) ' '
-            |> renderPoke ( row + 2, col + 5 ) ' '
-            |> renderPoke ( row + 3, col + 4 ) ' '
+        renderMap
+            |> pokeMonoPixel ( row, 8 ) (cornerToChar corner0)
+            |> pokeMonoPixel ( row + 4, col + 4 ) (cornerToChar corner1)
+            |> pokeMonoPixel ( row, col ) (cornerToChar corner2)
+            |> pokeMonoPixel ( row + 1, col + 7 ) '/'
+            |> pokeMonoPixel ( row + 2, col + 6 ) (edgeToChar True edge0)
+            |> pokeMonoPixel ( row + 3, col + 5 ) '/'
+            |> pokeMonoPixel ( row + 3, col + 3 ) '\\'
+            |> pokeMonoPixel ( row + 2, col + 2 ) (edgeToChar False edge1)
+            |> pokeMonoPixel ( row + 1, col + 1 ) '\\'
+            |> pokeMonoPixel ( row, col + 1 ) '-'
+            |> pokeMonoPixel ( row, col + 2 ) '-'
+            |> pokeMonoPixel ( row, col + 3 ) '-'
+            |> pokeMonoPixel ( row, col + 4 ) (flatEdgeToChar edge2)
+            |> pokeMonoPixel ( row, col + 5 ) '-'
+            |> pokeMonoPixel ( row, col + 6 ) '-'
+            |> pokeMonoPixel ( row, col + 7 ) '-'
+            |> pokeMonoPixel ( row + 2, col + 4 ) (landscapeToChar card.center)
+            |> pokeMonoPixel ( row + 1, col + 2 ) ' '
+            |> pokeMonoPixel ( row + 1, col + 3 ) ' '
+            |> pokeMonoPixel ( row + 1, col + 4 ) ' '
+            |> pokeMonoPixel ( row + 1, col + 5 ) ' '
+            |> pokeMonoPixel ( row + 1, col + 6 ) ' '
+            |> pokeMonoPixel ( row + 2, col + 3 ) ' '
+            |> pokeMonoPixel ( row + 2, col + 5 ) ' '
+            |> pokeMonoPixel ( row + 3, col + 4 ) ' '
 
 
 renderRightCell : ( Int, Int ) -> Maybe Cards.LandscapeCard -> RenderMap -> RenderMap
@@ -229,41 +245,83 @@ render board =
         Dict.foldl renderColumn Dict.empty board.landscapes
 
 
-renderCharsSince : Int -> Char -> ( Int, String ) -> ( Int, String )
-renderCharsSince colIndex char ( oldColIndex, str ) =
+crHtml : Html
+crHtml =
+    text "\n"
+
+
+renderPixelsSince : Int -> RenderPixel -> ( Int, List Html ) -> ( Int, List Html )
+renderPixelsSince colIndex pixel ( oldColIndex, renderItems ) =
     let
-        withEmptyChars = str ++ String.repeat (colIndex - oldColIndex - 1) " "
+        emptyPixelsCount = colIndex - oldColIndex - 1
+
+        emptyPixels = List.repeat emptyPixelsCount (text " ")
+
+        colors = Color.toRgb pixel.color
     in
-        ( colIndex, withEmptyChars ++ (String.fromChar char) )
+        ( colIndex
+        , List.concat
+            [ renderItems
+            , emptyPixels
+            , [ span
+                    [ style
+                        [ ( "color"
+                          , "rgb("
+                                ++ (toString colors.red)
+                                ++ ","
+                                ++ (toString colors.green)
+                                ++ ","
+                                ++ (toString colors.blue)
+                                ++ ")"
+                          )
+                        ]
+                    ]
+                    [ text (String.fromChar pixel.char) ]
+              ]
+            ]
+        )
 
 
-renderRow : Int -> RenderRow -> String
+renderRow : Int -> RenderRow -> List Html
 renderRow x row =
     let
-        ( oldColIndex, str' ) =
+        ( _, renderItems ) =
             Dict.filter (\colIndex _ -> colIndex >= x) row
-                |> Dict.foldl renderCharsSince ( x - 1, "" )
+                |> Dict.foldl renderPixelsSince ( x - 1, [] )
     in
-        str'
+        List.concat [ renderItems, [ crHtml ] ]
 
 
-renderRowsSince : Int -> Int -> RenderRow -> ( Int, String ) -> ( Int, String )
-renderRowsSince x rowIndex row ( oldRowIndex, str ) =
+renderRowsSince : Int -> Int -> RenderRow -> ( Int, List Html ) -> ( Int, List Html )
+renderRowsSince x rowIndex row ( oldRowIndex, renderItems ) =
     let
-        emptyLines = [oldRowIndex + 1..rowIndex - 1]
+        emptyLinesCount = rowIndex - oldRowIndex - 1
 
-        withEmptyLines = List.foldl (\rowIndex str -> str ++ "\n") str emptyLines
+        emptyLines = List.repeat emptyLinesCount crHtml
     in
-        ( rowIndex, withEmptyLines ++ (renderRow x row) ++ "\n" )
+        ( rowIndex, List.concat [ renderItems, emptyLines, (renderRow x row) ] )
 
 
-renderMapToText : ( Int, Int ) -> RenderMap -> String
-renderMapToText ( x, y ) renderMap =
+renderMapToHtml : ( Int, Int ) -> RenderMap -> List Html
+renderMapToHtml ( x, y ) renderMap =
     let
-        str = ""
-
-        ( oldRowIndex, str' ) =
+        ( oldRowIndex, renderItems ) =
             Dict.filter (\rowIndex _ -> rowIndex >= y) renderMap
-                |> Dict.foldl (renderRowsSince x) ( y - 1, str )
+                |> Dict.foldl (renderRowsSince x) ( y - 1, [] )
     in
-        str'
+        renderItems
+
+
+
+----------------------------------------------------
+-- renderRowsSince2 : Int -> (Int, Int) -> RenderMap -> String
+-- renderRowsSince2 left
+-- renderMapToText2 : ( Int, Int ) -> ( Int, Int ) -> RenderMap -> String
+-- renderMapToText2 ( left, top ) ( width, height ) renderMap =
+--     let
+--         str = ""
+--         ( oldRowIndex, str' ) =
+--             Dict.filter (\rowIndex _ -> rowIndex >= top && rowIndex <= top + height) renderMap
+--                 |> Dict.foldl (renderRowsSince2 left) ( top - 1, str )
+--     in
+--         str'

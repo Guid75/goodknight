@@ -3,7 +3,7 @@ module Main (..) where
 import Debug
 import Dict
 import Result
-import Html exposing (div, button, text, pre)
+import Html exposing (div, button, text, pre, span)
 import Graphics.Element exposing (..)
 import Html.Events exposing (onClick, onMouseDown, onMouseUp)
 import Html.Attributes exposing (..)
@@ -78,6 +78,15 @@ dashboardStyle =
         ]
 
 
+leftItems : List Html.Html
+leftItems =
+    Dict.empty
+        |> Render.pokeLeftCell ( 0, 1 ) backCard
+        |> Render.pokeLeftCell ( 1, 1 ) backCard
+        |> Render.pokeLeftCell ( 2, 1 ) backCard
+        |> Render.renderMapToHtml ( 0, 0 )
+
+
 view address model =
     div
         [ style
@@ -88,22 +97,15 @@ view address model =
         ]
         [ pre
             [ dashboardStyle ]
-            [ Render.pokeLeftCell ( 0, 1 ) backCard Dict.empty
-                |> Render.pokeLeftCell ( 1, 1 ) backCard
-                |> Render.pokeLeftCell ( 2, 1 ) backCard
-                |> Render.renderMapToText ( 0, 0 )
-                |> text
-            ]
+            leftItems
         , pre
             [ onMouseDown address (MousePress True)
             , onMouseUp address (MousePress False)
             , landscapeStyle model.mousePressed
             ]
-            [ model.board
-                |> Render.render
-                |> Render.renderMapToText model.topLeft
-                |> text
-            ]
+            (model.board
+              |> Render.render
+              |> Render.renderMapToHtml model.topLeft)
         ]
 
 
@@ -154,14 +156,6 @@ update action model =
         MouseMove pos ->
             ( mouseMove pos model, Effects.none )
 
-        -- MousePress pressed ->
-        --     ( { model
-        --         | mousePressed = pressed
-        --         , mousePressedInitialPos = model.mouseCurrentPos
-        --         , mousePressedInitialBoard = model.topLeft
-        --       }
-        --     , Effects.none
-        --     )
         MousePress pressed ->
             ( { model
                 | mousePressed = pressed
@@ -177,15 +171,14 @@ spaceToInc { x, y } =
     Move x y
 
 
-
--- handleMouseDown : Bool -> Action
--- handleMouseDown isDown =
---     MousePress isDown
-
-
 mouseMoveToAction : ( Int, Int ) -> Action
 mouseMoveToAction pos =
     MouseMove pos
+
+
+port requestOffset : Signal ( Int, Int )
+port requestOffset =
+    Mouse.position
 
 
 app =
