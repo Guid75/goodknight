@@ -1,4 +1,4 @@
-module Render (render, renderMapToHtml, pokeLeftCell, pokeRightCell) where
+module Render (render, renderMapToHtml, pokeLeftCell, pokePixel, pokeRightCell) where
 
 import Cards
 import Board
@@ -300,7 +300,7 @@ renderPixelsSince colIndex pixel ( oldColIndex, renderItems ) =
       colIndex - oldColIndex - 1
 
     emptyPixels =
-      text (String.repeat emptyPixelsCount " ")
+      text (String.repeat emptyPixelsCount "@")
   in
     ( colIndex
     , List.concat
