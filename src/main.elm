@@ -33,7 +33,6 @@ type alias Model =
     , mousePressedInitialBoard : ( Int, Int )
     , mousePressedInitialPos : ( Int, Int )
     , mouseCurrentPos : ( Int, Int )
-    , mouseCurrentCharPos : ( Int, Int )
     , landscapeMousePos : ( Int, Int )
     , landscapeFontName : String
     , landscapeFontSize : Int
@@ -68,7 +67,6 @@ init =
       , mousePressedInitialPos = ( 0, 0 )
       , mousePressedInitialBoard = ( 0, 0 )
       , mouseCurrentPos = ( 0, 0 )
-      , mouseCurrentCharPos = ( 0, 0 )
       , landscapeFontName = defaultLandscapeFontName
       , landscapeFontSize = defaultLandscapeFontSize
       , landscapeMousePos = ( 0, 0 )
@@ -124,27 +122,35 @@ leftItems =
 
 view : Model -> Html Msg
 view model =
-    div
-        [ style
-            [ ( "overflow", "hidden" )
-            , ( "display", "flex" )
-            , ( "flex-direction", "row" )
+    let
+        mouseCurrentCharPos =
+            mousePosToCharPos model.charSize model.topLeft model.mouseCurrentPos
+    in
+        div
+            [ style
+                [ ( "overflow", "hidden" )
+                , ( "display", "flex" )
+                , ( "flex-direction", "row" )
+                ]
             ]
-        ]
-        [ pre [ dashboardStyle ]
-            leftItems
-        , pre
-            [ onMouseDown (MousePress True)
-            , onMouseUp (MousePress False)
-            , landscapeStyle model
-            , id "landscape"
+            [ pre [ dashboardStyle ]
+                leftItems
+            , pre
+                [ onMouseDown (MousePress True)
+                , onMouseUp (MousePress False)
+                , landscapeStyle model
+                , id "landscape"
+                ]
+                (model.board
+                    |> Render.render
+                    |> (if model.mousePressed then
+                            identity
+                        else
+                            Render.pokePixel mouseCurrentCharPos { char = '@', color = Color.red }
+                       )
+                    |> Render.renderMapToHtml model.topLeft
+                )
             ]
-            (model.board
-                |> Render.render
-                |> Render.pokePixel model.mouseCurrentCharPos { char = '@', color = Color.red }
-                |> Render.renderMapToHtml model.topLeft
-            )
-        ]
 
 
 type Msg
@@ -183,21 +189,23 @@ mouseMoveWhilePressed model =
         }
 
 
+mousePosToCharPos : ( Float, Float ) -> ( Int, Int ) -> ( Int, Int ) -> ( Int, Int )
+mousePosToCharPos ( charWidth, charHeight ) ( left, top ) ( x, y ) =
+    ( (floor ((toFloat y) / charHeight)) + top
+    , (floor ((toFloat x) / charWidth)) + left
+    )
+
+
 mouseMove : ( Int, Int ) -> Model -> Model
 mouseMove ( x, y ) model =
     let
-        ( charWidth, charHeight ) =
-            model.charSize
-
         model' =
             { model | mouseCurrentPos = ( x, y ) }
     in
         if model.mousePressed then
             mouseMoveWhilePressed model'
         else
-            { model'
-                | mouseCurrentCharPos = ( (floor ((toFloat y) / charHeight)) + snd model.topLeft, (floor ((toFloat x) / charWidth)) + fst model.topLeft )
-            }
+            model'
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -216,11 +224,10 @@ update msg model =
             mouseMove pos model ! []
 
         Move x y ->
-            ( { model
+            { model
                 | topLeft = ( fst model.topLeft - x, snd model.topLeft + y )
-              }
-            , Cmd.none
-            )
+            }
+                ! []
 
         MouseMove pos ->
             ( model, requestLandscapeMousePos ( pos.x, pos.y ) )
