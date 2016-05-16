@@ -237,12 +237,6 @@ spaceToInc { x, y } =
     Move x y
 
 
-
--- mouseMoveToAction : ( Int, Int ) -> Msg
--- mouseMoveToAction pos =
---   MouseMove pos
-
-
 port requestCharSize : ( String, Int ) -> Cmd msg
 
 
@@ -256,9 +250,6 @@ port landscapeMousePosResult : (( Int, Int ) -> msg) -> Sub msg
 
 
 
--- landscapeMousePosResultAction : Signal Action
--- landscapeMousePosResultAction =
---   Signal.map LandscapeMousePos landscapeMousePosResult
 -- SUBSCRIPTIONS
 
 
