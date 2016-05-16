@@ -157,14 +157,14 @@ type Msg
     | NoOp
 
 
-mouseMoveWhilePressed : ( Int, Int ) -> Model -> Model
-mouseMoveWhilePressed ( x, y ) model =
+mouseMoveWhilePressed : Model -> Model
+mouseMoveWhilePressed model =
     let
-        model' =
-            { model | mouseCurrentPos = ( x, y ) }
-
         ( charWidth, charHeight ) =
             model.charSize
+
+        ( x, y ) =
+            model.mouseCurrentPos
 
         ( initialX, initialY ) =
             model.mousePressedInitialPos
@@ -175,7 +175,7 @@ mouseMoveWhilePressed ( x, y ) model =
         deltaY =
             floor ((toFloat (y - initialY)) / charHeight)
     in
-        { model'
+        { model
             | topLeft =
                 ( fst model.mousePressedInitialBoard - deltaX
                 , snd model.mousePressedInitialBoard - deltaY
@@ -188,13 +188,15 @@ mouseMove ( x, y ) model =
     let
         ( charWidth, charHeight ) =
             model.charSize
+
+        model' =
+            { model | mouseCurrentPos = ( x, y ) }
     in
         if model.mousePressed then
-            mouseMoveWhilePressed ( x, y ) model
+            mouseMoveWhilePressed model'
         else
-            { model
-                | mouseCurrentPos = ( x, y )
-                , mouseCurrentCharPos = ( (floor ((toFloat y) / charHeight)) + snd model.topLeft, (floor ((toFloat x) / charWidth)) + fst model.topLeft )
+            { model'
+                | mouseCurrentCharPos = ( (floor ((toFloat y) / charHeight)) + snd model.topLeft, (floor ((toFloat x) / charWidth)) + fst model.topLeft )
             }
 
 
