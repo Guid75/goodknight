@@ -35,6 +35,8 @@ type alias Model =
     , mouseCurrentPos : ( Int, Int )
     , mouseCurrentCharPos : ( Int, Int )
     , landscapeMousePos : ( Int, Int )
+    , landscapeFontName : String
+    , landscapeFontSize : Int
     , charSize : ( Float, Float )
     }
 
@@ -48,6 +50,16 @@ tmpInitBoard board =
         |> Board.setLandscape ( 15, 15, Board.CellLeft ) (getLandscapeCardAndRotate 7 2)
 
 
+defaultLandscapeFontName : String
+defaultLandscapeFontName =
+    "monospace"
+
+
+defaultLandscapeFontSize : Int
+defaultLandscapeFontSize =
+    24
+
+
 init : ( Model, Cmd Msg )
 init =
     ( { board = Board.init Board.CellLeft |> tmpInitBoard
@@ -57,32 +69,35 @@ init =
       , mousePressedInitialBoard = ( 0, 0 )
       , mouseCurrentPos = ( 0, 0 )
       , mouseCurrentCharPos = ( 0, 0 )
+      , landscapeFontName = defaultLandscapeFontName
+      , landscapeFontSize = defaultLandscapeFontSize
       , landscapeMousePos = ( 0, 0 )
       , charSize = ( 7.22, 14.0 )
       }
-    , requestCharSize ( "monospace", 12 )
+    , requestCharSize ( defaultLandscapeFontName, defaultLandscapeFontSize )
     )
 
 
-landscapeStyle : Bool -> Html.Attribute msg
-landscapeStyle mousePressed =
+landscapeStyle : Model -> Html.Attribute msg
+landscapeStyle model =
     let
         backgroundColor =
-            if mousePressed then
+            if model.mousePressed then
                 "#FFE0E0"
             else
                 "#FFFFFF"
     in
         style
             [ ( "overflow", "hidden" )
-            , ( "font-family", "monospace,monospace" )
-            , ( "font-size", "12px" )
+            , ( "font-family", model.landscapeFontName )
+            , ( "font-size", (toString model.landscapeFontSize) ++ "px" )
             , ( "flex", "1" )
             , ( "position", "relative" )
             , ( "background-color", backgroundColor )
             , ( "-webkit-user-select", "none" )
             , ( "text-rendering", "optimizeLegibility" )
-              --      , ( "cursor", "move" )
+            , ( "cursor", "grab" )
+            , ( "margin", "0px" )
             ]
 
 
@@ -94,18 +109,7 @@ dashboardStyle =
         , ( "background-color", "#E0E0E0" )
         , ( "-webkit-user-select", "none" )
         , ( "width", "7em" )
-        ]
-
-
-redSquareStyle : Html.Attribute msg
-redSquareStyle =
-    style
-        [ ( "background-color", "red" )
-        , ( "position", "absolute" )
-        , ( "top", "0" )
-        , ( "left", "0" )
-        , ( "width", "101" )
-        , ( "height", "140" )
+        , ( "margin", "0px" )
         ]
 
 
@@ -132,17 +136,13 @@ view model =
         , pre
             [ onMouseDown (MousePress True)
             , onMouseUp (MousePress False)
-            , landscapeStyle model.mousePressed
+            , landscapeStyle model
             , id "landscape"
             ]
-            ((div [ redSquareStyle ]
-                []
-             )
-                :: (model.board
-                        |> Render.render
-                        |> Render.pokePixel model.mouseCurrentCharPos { char = '@', color = Color.red }
-                        |> Render.renderMapToHtml model.topLeft
-                   )
+            (model.board
+                |> Render.render
+                |> Render.pokePixel model.mouseCurrentCharPos { char = '@', color = Color.red }
+                |> Render.renderMapToHtml model.topLeft
             )
         ]
 
@@ -163,14 +163,17 @@ mouseMoveWhilePressed ( x, y ) model =
         model' =
             { model | mouseCurrentPos = ( x, y ) }
 
+        ( charWidth, charHeight ) =
+            model.charSize
+
         ( initialX, initialY ) =
             model.mousePressedInitialPos
 
         deltaX =
-            (x - initialX) // 8
+            floor ((toFloat (x - initialX)) / charWidth)
 
         deltaY =
-            (y - initialY) // 14
+            floor ((toFloat (y - initialY)) / charHeight)
     in
         { model'
             | topLeft =
@@ -202,13 +205,10 @@ update msg model =
             model ! []
 
         RequestCharSize ->
-            ( model, requestCharSize ( "monospace", 12 ) )
+            ( model, requestCharSize ( model.landscapeFontName, model.landscapeFontSize ) )
 
         CharSizeResult size ->
-            { model
-                | charSize = (Debug.log "size" size)
-            }
-                ! []
+            { model | charSize = size } ! []
 
         LandscapeMousePos pos ->
             mouseMove pos model ! []
