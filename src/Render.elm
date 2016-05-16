@@ -1,4 +1,4 @@
-module Render (render, renderMapToHtml, pokeLeftCell, pokePixel, pokeRightCell) where
+module Render exposing (render, renderMapToHtml, pokeLeftCell, pokePixel, pokeRightCell)
 
 import Cards
 import Board
@@ -263,7 +263,7 @@ render board =
     Dict.foldl renderColumn Dict.empty board.landscapes
 
 
-crHtml : Html
+crHtml : Html msg
 crHtml =
   text "\n"
 
@@ -283,7 +283,7 @@ colorToCss color =
       ++ ")"
 
 
-pixelToSpan : Pixel -> Html
+pixelToSpan : Pixel -> Html msg
 pixelToSpan pixel =
   span
     [ style
@@ -293,14 +293,14 @@ pixelToSpan pixel =
     [ text (String.fromChar pixel.char) ]
 
 
-renderPixelsSince : Int -> Pixel -> ( Int, List Html ) -> ( Int, List Html )
+renderPixelsSince : Int -> Pixel -> ( Int, List (Html msg) ) -> ( Int, List (Html msg) )
 renderPixelsSince colIndex pixel ( oldColIndex, renderItems ) =
   let
     emptyPixelsCount =
       colIndex - oldColIndex - 1
 
     emptyPixels =
-      text (String.repeat emptyPixelsCount "@")
+      text (String.repeat emptyPixelsCount " ")
   in
     ( colIndex
     , List.concat
@@ -311,7 +311,7 @@ renderPixelsSince colIndex pixel ( oldColIndex, renderItems ) =
     )
 
 
-renderRow : Int -> RenderRow -> List Html
+renderRow : Int -> RenderRow -> List (Html msg)
 renderRow left row =
   let
     ( _, renderItems ) =
@@ -321,7 +321,7 @@ renderRow left row =
     List.concat [ renderItems, [ crHtml ] ]
 
 
-renderRowsSince : Int -> Int -> RenderRow -> ( Int, List Html ) -> ( Int, List Html )
+renderRowsSince : Int -> Int -> RenderRow -> ( Int, List (Html msg) ) -> ( Int, List (Html msg) )
 renderRowsSince left rowIndex row ( oldRowIndex, renderItems ) =
   let
     emptyLinesCount =
@@ -333,7 +333,7 @@ renderRowsSince left rowIndex row ( oldRowIndex, renderItems ) =
     ( rowIndex, List.concat [ renderItems, emptyLines, (renderRow left row) ] )
 
 
-renderMapToHtml : ( Int, Int ) -> RenderMap -> List Html
+renderMapToHtml : ( Int, Int ) -> RenderMap -> List (Html msg)
 renderMapToHtml ( left, top ) renderMap =
   let
     ( oldRowIndex, renderItems ) =

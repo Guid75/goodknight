@@ -1,4 +1,4 @@
-module Board (..) where
+module Board exposing (..)
 
 import Array
 import Dict exposing (Dict)

@@ -1,78 +1,51 @@
 <html>
-  <head>
-    <title>Good Knight!</title>
-    <script type="text/javascript" src="elm.js"></script>
-  </head>
+    <head>
+        <title>Good Knight!</title>
+        <script type="text/javascript" src="elm.js"></script>
+    </head>
 
-  <body style="margin: 0 0 0 0;">
-  </body>
+    <body style="margin: 0 0 0 0;">
+    </body>
 
-  <script type="text/javascript">
+    <script type="text/javascript">
     var stamperDiv = document.getElementById('main');
-    var myapp = Elm.fullscreen(Elm.Main, { charSizeResult : [10.0, 10.0] });
-    myapp.ports.requestOffset.subscribe(requestOffset);
-
+    var myapp = Elm.GoodKnight.fullscreen();
     myapp.ports.requestCharSize.subscribe(requestCharSize);
+    myapp.ports.requestLandscapeMousePos.subscribe(requestLandscapeMousePos);
 
-  function requestCharSize(params) {
-      var fontFamily = params[0];
-      var fontSize = params[1];
+    function requestCharSize(params) {
+        var fontFamily = params[0];
+        var fontSize = params[1];
 
-      // create a hidden pre span
-      var pre = document.createElement('pre');
-      var preContent = document.createTextNode('A');
-      var a = document.createAttribute("style");
-      a.value = 'position: absolute; top: -100px; font-size: ' + fontSize + 'px; font-family: ' + fontFamily + ';padding: 0px; margin: 0 0 0 0';
-      pre.setAttributeNode(a);
+        // create a hidden pre node
+        var pre = document.createElement('pre');
+        var preContent = document.createTextNode('A');
+        var a = document.createAttribute("style");
+        a.value = 'position: absolute; top: -100px; font-size: ' + fontSize + 'px; font-family: ' + fontFamily + ';padding: 0px; margin: 0 0 0 0';
+        pre.setAttributeNode(a);
+        pre.appendChild(preContent);
+        document.body.appendChild(pre);
 
-      pre.appendChild(preContent);
-      document.body.appendChild(pre);
-      var rect = pre.getBoundingClientRect();
-      document.body.removeChild(pre);
+        // mesure it
+        var rect = pre.getBoundingClientRect();
 
-      myapp.ports.charSizeResult.send([ rect.width, rect.height ]);
-  }
+        // and finally, destroy it
+        document.body.removeChild(pre);
 
-   function offsetToPos(offset, text) {
-       var y = 0;
-       var x = -1;
-       for (i = 0; i <= offset; i++) {
-           if (text[i] === '\n') {
-               x = -1;
-               y++;
-           } else {
-               x++;
-           }
-       }
-       return [x, y];
-   }
+        // back to Elm
 
-   function requestOffset(pos) {
-       var x = pos[0];
-       var y = pos[1];
-       var preNode;
-       var charIndex;
-
-       if (document.caretRangeFromPoint) {
-           range = document.caretRangeFromPoint(x, y);
-           textNode = range.startContainer;
-           preNode = textNode.parentNode;
-           if (preNode.tagName === 'SPAN') {
-               preNode = preNode.parentNode;
-//               console.log('**span index: ', Array.prototype.indexOf.call(preNode.childNodes, textNode.parentNode)); // + range.startOffset);
-               charIndex = Array.prototype.indexOf.call(preNode.childNodes, textNode.parentNode);
-           } else {
-//			   console.log(preNode);
-//               console.log('index: ', Array.prototype.indexOf.call(preNode.childNodes, textNode) + range.startOffset);
-           }
-//           console.log(preNode.childNodes.length);
-
-//           console.log(range.startOffset);
-           offset = range.startOffset - 1;
-/*           console.log("=>", range.commonAncestorContainer);*/
-//           console.log(offsetToPos(offset, textNode.textContent));
-        }
+        // a workaround waiting for a bug resolution (https://github.com/elm-lang/core/issues/595)
+        setTimeout(function () {
+            myapp.ports.charSizeResult.send([ rect.width, rect.height ]);
+        }, 0);
     }
 
-  </script>
+    function requestLandscapeMousePos(pos) {
+        var landscape = document.getElementById('landscape');
+        var rect = landscape.getBoundingClientRect();
+        // back to Elm
+        myapp.ports.landscapeMousePosResult.send([ pos[0] - rect.left, pos[1] - rect.top ]);
+    }
+
+    </script>
 </html>

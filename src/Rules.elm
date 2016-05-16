@@ -1,4 +1,4 @@
-module Rules (..) where
+module Rules exposing (..)
 
 import Debug
 import Maybe

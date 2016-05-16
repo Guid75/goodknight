@@ -1,4 +1,4 @@
-module Cards (..) where
+module Cards exposing (..)
 
 import Array
 import Color
