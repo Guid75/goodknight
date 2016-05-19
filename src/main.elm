@@ -12,7 +12,7 @@ import Keyboard
 import Mouse
 import Time
 import Cards exposing (..)
-import Board exposing (setCell, Board)
+import Board exposing (setCell, Board, CellCoordinates, CellPosition(..))
 import Rules
 import Render
 
@@ -36,7 +36,13 @@ type alias Model =
     , landscapeMousePos : ( Int, Int )
     , landscapeFontName : String
     , landscapeFontSize : Int
-    , charSize : ( Float, Float )
+    , landscapeCharSize : FloatSize
+    }
+
+
+type alias FloatSize =
+    { w : Float
+    , h : Float
     }
 
 
@@ -70,7 +76,7 @@ init =
       , landscapeFontName = defaultLandscapeFontName
       , landscapeFontSize = defaultLandscapeFontSize
       , landscapeMousePos = ( 0, 0 )
-      , charSize = ( 7.22, 14.0 )
+      , landscapeCharSize = { w = 7.50, h = 14.0 }
       }
     , requestCharSize ( defaultLandscapeFontName, defaultLandscapeFontSize )
     )
@@ -124,7 +130,7 @@ view : Model -> Html Msg
 view model =
     let
         mouseCurrentCharPos =
-            mousePosToCharPos model.charSize model.topLeft model.mouseCurrentPos
+            mousePosToCharPos model.landscapeCharSize model.topLeft model.mouseCurrentPos
     in
         div
             [ style
@@ -166,9 +172,6 @@ type Msg
 mouseMoveWhilePressed : Model -> Model
 mouseMoveWhilePressed model =
     let
-        ( charWidth, charHeight ) =
-            model.charSize
-
         ( x, y ) =
             model.mouseCurrentPos
 
@@ -176,10 +179,10 @@ mouseMoveWhilePressed model =
             model.mousePressedInitialPos
 
         deltaX =
-            floor ((toFloat (x - initialX)) / charWidth)
+            floor ((toFloat (x - initialX)) / model.landscapeCharSize.w)
 
         deltaY =
-            floor ((toFloat (y - initialY)) / charHeight)
+            floor ((toFloat (y - initialY)) / model.landscapeCharSize.h)
     in
         { model
             | topLeft =
@@ -189,10 +192,10 @@ mouseMoveWhilePressed model =
         }
 
 
-mousePosToCharPos : ( Float, Float ) -> ( Int, Int ) -> ( Int, Int ) -> ( Int, Int )
-mousePosToCharPos ( charWidth, charHeight ) ( left, top ) ( x, y ) =
-    ( (floor ((toFloat y) / charHeight)) + top
-    , (floor ((toFloat x) / charWidth)) + left
+mousePosToCharPos : FloatSize -> ( Int, Int ) -> ( Int, Int ) -> ( Int, Int )
+mousePosToCharPos charSize ( left, top ) ( x, y ) =
+    ( (floor ((toFloat y) / charSize.h)) + top
+    , (floor ((toFloat x) / charSize.w)) + left
     )
 
 
@@ -208,6 +211,18 @@ mouseMove ( x, y ) model =
             model'
 
 
+getHoveredCell : Model -> CellCoordinates
+getHoveredCell model =
+    let
+        absoluteMouseCoord =
+            -- use floor instead of round?
+            ( fst model.mouseCurrentPos + round ((toFloat (fst model.topLeft)) * model.landscapeCharSize.w)
+            , snd model.mouseCurrentPos + round ((toFloat (snd model.topLeft)) * model.landscapeCharSize.h)
+            )
+    in
+        ( 0, 0, CellLeft )
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
@@ -218,7 +233,7 @@ update msg model =
             ( model, requestCharSize ( model.landscapeFontName, model.landscapeFontSize ) )
 
         CharSizeResult size ->
-            { model | charSize = size } ! []
+            { model | landscapeCharSize = { w = fst size, h = snd size } } ! []
 
         LandscapeMousePos pos ->
             mouseMove pos model ! []
