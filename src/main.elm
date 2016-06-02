@@ -271,12 +271,10 @@ getHoveredCell model =
 
         col : Int
         col =
-            Debug.log "col"
-                (if isEven row then
-                    floor ((absoluteMouseCoord.x - model.landscapeCharSize.w / 2.0 + triangleSize.w * multiplier) / triangleSize.w)
-                 else
-                    floor ((absoluteMouseCoord.x - model.landscapeCharSize.w / 2.0 + triangleSize.w * multiplier - triangleSize.w / 2.0) / triangleSize.w)
-                )
+            if isEven row then
+                floor ((absoluteMouseCoord.x - model.landscapeCharSize.w / 2.0 + triangleSize.w * multiplier) / triangleSize.w)
+            else
+                floor ((absoluteMouseCoord.x - model.landscapeCharSize.w / 2.0 + triangleSize.w * multiplier - triangleSize.w / 2.0) / triangleSize.w)
 
         leftTriangle =
             getTriangle model.landscapeCharSize ( col - 1, row, CellRight )
