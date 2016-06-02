@@ -37,6 +37,7 @@ type alias Model =
     , landscapeFontName : String
     , landscapeFontSize : Int
     , landscapeCharSize : FloatSize
+    , hoveredCell : CellCoordinates
     }
 
 
@@ -53,6 +54,9 @@ tmpInitBoard board =
         |> Board.setLandscape ( 2, 0, Board.CellRight ) (getLandscapeCardAndRotate 3 0)
         |> Board.setLandscape ( 7, 9, Board.CellRight ) (getLandscapeCardAndRotate 15 1)
         |> Board.setLandscape ( 15, 15, Board.CellLeft ) (getLandscapeCardAndRotate 7 2)
+        |> Board.setLandscape ( 0, -1, Board.CellLeft ) (getLandscapeCardAndRotate 7 2)
+        |> Board.setLandscape ( 0, -2, Board.CellLeft ) (getLandscapeCardAndRotate 7 2)
+        |> Board.setLandscape ( 0, -3, Board.CellLeft ) (getLandscapeCardAndRotate 15 1)
 
 
 defaultLandscapeFontName : String
@@ -76,7 +80,8 @@ init =
       , landscapeFontName = defaultLandscapeFontName
       , landscapeFontSize = defaultLandscapeFontSize
       , landscapeMousePos = ( 0, 0 )
-      , landscapeCharSize = { w = 7.50, h = 14.0 }
+      , landscapeCharSize = { w = 7.5, h = 14.0 }
+      , hoveredCell = ( 0, 0, CellLeft )
       }
     , requestCharSize ( defaultLandscapeFontName, defaultLandscapeFontSize )
     )
@@ -154,6 +159,7 @@ view model =
                         else
                             Render.pokePixel mouseCurrentCharPos { char = '@', color = Color.red }
                        )
+                    |> Render.renderCell model.hoveredCell { left = Just backCard, right = Just backCard }
                     |> Render.renderMapToHtml model.topLeft
                 )
             ]
@@ -167,6 +173,126 @@ type Msg
     | LandscapeMousePos ( Int, Int )
     | RequestCharSize
     | NoOp
+
+
+type alias Point =
+    { x : Float
+    , y : Float
+    }
+
+
+type alias Triangle =
+    ( Point, Point, Point )
+
+
+isEven : Int -> Bool
+isEven n =
+    n `rem` 2 == 0
+
+
+isInTriangle : Triangle -> Point -> Bool
+isInTriangle ( p1, p2, p3 ) { x, y } =
+    let
+        a =
+            ((p2.y - p3.y) * (x - p3.x) + (p3.x - p2.x) * (y - p3.y))
+                / ((p2.y - p3.y) * (p1.x - p3.x) + (p3.x - p2.x) * (p1.y - p3.y))
+
+        b =
+            ((p3.y - p1.y) * (x - p3.x) + (p1.x - p3.x) * (y - p3.y))
+                / ((p2.y - p3.y) * (p1.x - p3.x) + (p3.x - p2.x) * (p1.y - p3.y))
+
+        c =
+            1 - a - b
+    in
+        0 <= a && a <= 1 && 0 <= b && b <= 1 && 0 <= c && c <= 1
+
+
+triangleBoundingSize : FloatSize -> FloatSize
+triangleBoundingSize { w, h } =
+    { w = 8 * w
+    , h = 4 * h
+    }
+
+
+getTriangle : FloatSize -> CellCoordinates -> Triangle
+getTriangle landscapeCharSize ( col, row, cellPosition ) =
+    let
+        triangleSize =
+            triangleBoundingSize { w = landscapeCharSize.w, h = landscapeCharSize.h }
+
+        multiplier =
+            toFloat
+                (if row <= 0 then
+                    row // 2
+                 else
+                    (row + 1) // 2
+                )
+
+        x =
+            if isEven row then
+                landscapeCharSize.w / 2.0 + (toFloat col) * triangleSize.w - triangleSize.w * multiplier
+            else
+                landscapeCharSize.w / 2.0 + (toFloat col) * triangleSize.w - triangleSize.w * multiplier + triangleSize.w / 2.0
+
+        y =
+            triangleSize.h * toFloat row + landscapeCharSize.h / 2.0
+    in
+        case cellPosition of
+            CellLeft ->
+                ( { x = x + triangleSize.w / 2.0, y = y }, { x = x + triangleSize.w, y = y + triangleSize.h }, { x = x, y = y + triangleSize.h } )
+
+            CellRight ->
+                ( { x = x + triangleSize.w / 2.0, y = y }, { x = x + triangleSize.w * 1.5, y = y }, { x = x + triangleSize.w, y = y + triangleSize.h } )
+
+
+getHoveredCell : Model -> CellCoordinates
+getHoveredCell model =
+    let
+        absoluteMouseCoord : Point
+        absoluteMouseCoord =
+            { x = toFloat (fst model.mouseCurrentPos) + toFloat (fst model.topLeft) * model.landscapeCharSize.w
+            , y = toFloat (snd model.mouseCurrentPos) + toFloat (snd model.topLeft) * model.landscapeCharSize.h
+            }
+
+        triangleSize =
+            triangleBoundingSize { w = model.landscapeCharSize.w, h = model.landscapeCharSize.h }
+
+        row : Int
+        row =
+            floor ((absoluteMouseCoord.y - model.landscapeCharSize.h / 2.0) / triangleSize.h)
+
+        multiplier =
+            toFloat
+                (if row <= 0 then
+                    row // 2
+                 else
+                    (row + 1) // 2
+                )
+
+        col : Int
+        col =
+            Debug.log "col"
+                (if isEven row then
+                    floor ((absoluteMouseCoord.x - model.landscapeCharSize.w / 2.0 + triangleSize.w * multiplier) / triangleSize.w)
+                 else
+                    floor ((absoluteMouseCoord.x - model.landscapeCharSize.w / 2.0 + triangleSize.w * multiplier - triangleSize.w / 2.0) / triangleSize.w)
+                )
+
+        leftTriangle =
+            getTriangle model.landscapeCharSize ( col - 1, row, CellRight )
+
+        middleTriangle =
+            getTriangle model.landscapeCharSize ( col, row, CellLeft )
+
+        rightTriangle =
+            getTriangle model.landscapeCharSize ( col, row, CellRight )
+    in
+        if isInTriangle leftTriangle absoluteMouseCoord then
+            ( col - 1, row, CellRight )
+        else if isInTriangle middleTriangle absoluteMouseCoord then
+            ( col, row, CellLeft )
+        else
+            ( col, row, CellRight )
 
 
 mouseMoveWhilePressed : Model -> Model
@@ -208,19 +334,7 @@ mouseMove ( x, y ) model =
         if model.mousePressed then
             mouseMoveWhilePressed model'
         else
-            model'
-
-
-getHoveredCell : Model -> CellCoordinates
-getHoveredCell model =
-    let
-        absoluteMouseCoord =
-            -- use floor instead of round?
-            ( fst model.mouseCurrentPos + round ((toFloat (fst model.topLeft)) * model.landscapeCharSize.w)
-            , snd model.mouseCurrentPos + round ((toFloat (snd model.topLeft)) * model.landscapeCharSize.h)
-            )
-    in
-        ( 0, 0, CellLeft )
+            { model' | hoveredCell = getHoveredCell model' }
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )

@@ -1,6 +1,7 @@
 module Render
     exposing
         ( render
+        , renderCell
         , renderMapToHtml
         , pokeLeftCell
         , pokePixel
