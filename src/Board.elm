@@ -1,4 +1,16 @@
-module Board exposing (..)
+module Board
+    exposing
+        ( CellPosition(..)
+        , CellCoordinates
+        , CellBinome
+        , isEmptyCell
+        , Board
+        , Column
+        , init
+        , getLandscape
+        , setLandscape
+        , setCell
+        )
 
 import Array
 import Dict exposing (Dict)

@@ -220,19 +220,11 @@ getTriangle landscapeCharSize ( col, row, cellPosition ) =
         triangleSize =
             triangleBoundingSize { w = landscapeCharSize.w, h = landscapeCharSize.h }
 
-        multiplier =
-            toFloat
-                (if row <= 0 then
-                    row // 2
-                 else
-                    (row + 1) // 2
-                )
-
         x =
             if isEven row then
-                landscapeCharSize.w / 2.0 + (toFloat col) * triangleSize.w - triangleSize.w * multiplier
+                landscapeCharSize.w / 2.0 + (toFloat col) * triangleSize.w - triangleSize.w * toFloat (row // 2)
             else
-                landscapeCharSize.w / 2.0 + (toFloat col) * triangleSize.w - triangleSize.w * multiplier + triangleSize.w / 2.0
+                landscapeCharSize.w / 2.0 + (toFloat col) * triangleSize.w - triangleSize.w * toFloat ((row - 1) // 2) - triangleSize.w / 2.0
 
         y =
             triangleSize.h * toFloat row + landscapeCharSize.h / 2.0
@@ -261,20 +253,12 @@ getHoveredCell model =
         row =
             floor ((absoluteMouseCoord.y - model.landscapeCharSize.h / 2.0) / triangleSize.h)
 
-        multiplier =
-            toFloat
-                (if row <= 0 then
-                    row // 2
-                 else
-                    (row + 1) // 2
-                )
-
         col : Int
         col =
             if isEven row then
-                floor ((absoluteMouseCoord.x - model.landscapeCharSize.w / 2.0 + triangleSize.w * multiplier) / triangleSize.w)
+                floor ((absoluteMouseCoord.x - model.landscapeCharSize.w / 2.0 + triangleSize.w * toFloat (row // 2)) / triangleSize.w)
             else
-                floor ((absoluteMouseCoord.x - model.landscapeCharSize.w / 2.0 + triangleSize.w * multiplier - triangleSize.w / 2.0) / triangleSize.w)
+                floor ((absoluteMouseCoord.x - model.landscapeCharSize.w / 2.0 + triangleSize.w * toFloat ((row - 1) // 2) + triangleSize.w / 2.0) / triangleSize.w)
 
         leftTriangle =
             getTriangle model.landscapeCharSize ( col - 1, row, CellRight )
@@ -383,10 +367,6 @@ port requestLandscapeMousePos : ( Int, Int ) -> Cmd msg
 
 
 port landscapeMousePosResult : (( Int, Int ) -> msg) -> Sub msg
-
-
-
--- SUBSCRIPTIONS
 
 
 subscriptions : Model -> Sub Msg
