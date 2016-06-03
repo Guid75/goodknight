@@ -52,8 +52,6 @@ tmpInitBoard board =
     board
         |> Board.setLandscape ( 2, 0, Board.CellLeft ) (getLandscapeCardAndRotate 3 0)
         |> Board.setLandscape ( 2, 0, Board.CellRight ) (getLandscapeCardAndRotate 3 0)
-        |> Board.setLandscape ( 7, 9, Board.CellRight ) (getLandscapeCardAndRotate 15 1)
-        |> Board.setLandscape ( 15, 15, Board.CellLeft ) (getLandscapeCardAndRotate 7 2)
         |> Board.setLandscape ( 0, -1, Board.CellLeft ) (getLandscapeCardAndRotate 7 2)
         |> Board.setLandscape ( 0, -2, Board.CellLeft ) (getLandscapeCardAndRotate 7 2)
         |> Board.setLandscape ( 0, -3, Board.CellLeft ) (getLandscapeCardAndRotate 15 1)
@@ -142,6 +140,7 @@ view model =
                 [ ( "overflow", "hidden" )
                 , ( "display", "flex" )
                 , ( "flex-direction", "row" )
+                , ( "height", "100vh" )
                 ]
             ]
             [ pre [ dashboardStyle ]
