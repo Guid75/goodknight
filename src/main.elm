@@ -26,6 +26,12 @@ main =
         }
 
 
+type alias Player =
+    { name : String
+    , id : String
+    }
+
+
 type alias Model =
     { board : Board
     , topLeft : ( Int, Int )
@@ -38,6 +44,9 @@ type alias Model =
     , landscapeFontSize : Int
     , landscapeCharSize : FloatSize
     , hoveredCell : CellCoordinates
+    , players : Dict.Dict String Player
+    , currentPlayer : Maybe String
+    , currentCard : Maybe LandscapeCard
     }
 
 
@@ -69,7 +78,9 @@ defaultLandscapeFontSize =
 
 init : ( Model, Cmd Msg )
 init =
-    ( { board = Board.init Board.CellLeft |> tmpInitBoard
+    ( { board =
+            Board.init Board.CellLeft
+            -- |> tmpInitBoard
       , topLeft = ( 0, 0 )
       , mousePressed = False
       , mousePressedInitialPos = ( 0, 0 )
@@ -80,6 +91,15 @@ init =
       , landscapeMousePos = ( 0, 0 )
       , landscapeCharSize = { w = 7.5, h = 14.0 }
       , hoveredCell = ( 0, 0, CellLeft )
+      , players = Dict.empty
+      , currentPlayer = Nothing
+      , currentCard =
+            Just
+                { corners = ( Neutral, Neutral, Tournament )
+                , edges = allNeutral
+                , center = Neutral
+                }
+            -- Nothing
       }
     , requestCharSize ( defaultLandscapeFontName, defaultLandscapeFontSize )
     )
@@ -134,6 +154,9 @@ view model =
     let
         mouseCurrentCharPos =
             mousePosToCharPos model.landscapeCharSize model.topLeft model.mouseCurrentPos
+
+        l =
+            Debug.log "moves" (Rules.getPossibleMoves model.board (Maybe.withDefault backCard model.currentCard))
     in
         div
             [ style
@@ -152,14 +175,19 @@ view model =
                 , id "landscape"
                 ]
                 (model.board
-                    |> Render.render
-                    |> (if model.mousePressed then
+                    |>
+                        Render.render
+                    |>
+                        (if model.mousePressed then
                             identity
-                        else
+                         else
                             Render.pokePixel mouseCurrentCharPos { char = '@', color = Color.red }
-                       )
-                    |> Render.renderCell model.hoveredCell { left = Just backCard, right = Just backCard }
-                    |> Render.renderMapToHtml model.topLeft
+                        )
+                    -- |> Render.renderCell model.hoveredCell { left = Just backCard, right = Just backCard }
+                    |>
+                        Render.renderCell model.hoveredCell { left = model.currentCard, right = model.currentCard }
+                    |>
+                        Render.renderMapToHtml model.topLeft
                 )
             ]
 
@@ -346,7 +374,9 @@ update msg model =
             { model
                 | mousePressed = pressed
                 , mousePressedInitialPos = model.mouseCurrentPos
-                , mousePressedInitialBoard = model.topLeft
+                , mousePressedInitialBoard =
+                    model.topLeft
+                    -- , board = Board.setLandscape model.hoveredCell backCard model.board
             }
                 ! []
 
