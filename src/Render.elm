@@ -257,8 +257,8 @@ renderCell ( x, y, position ) cellBinome renderMap =
             renderRightCell ( x, y ) cellBinome.right renderMap
 
 
-render : Board.Board -> RenderMap
-render board =
+render : Board.Board -> RenderMap -> RenderMap
+render board renderMap =
     let
         renderBinome x y cellBinome renderMap =
             renderCell ( x, y, Board.CellLeft ) cellBinome renderMap
@@ -268,7 +268,7 @@ render board =
         renderColumn x column renderMap =
             Dict.foldl (renderBinome x) renderMap column
     in
-        Dict.foldl renderColumn Dict.empty board.landscapes
+        Dict.foldl renderColumn renderMap board.landscapes
 
 
 crHtml : Html msg

@@ -2,6 +2,7 @@ port module GoodKnight exposing (..)
 
 import Debug
 import Dict
+import Array
 import Result
 import Html exposing (..)
 import Html.App as Html
@@ -80,8 +81,8 @@ init : ( Model, Cmd Msg )
 init =
     ( { board =
             Board.init Board.CellLeft
-            -- |> tmpInitBoard
-      , topLeft = ( 0, 0 )
+                |> tmpInitBoard
+      , topLeft = ( -10, -14 )
       , mousePressed = False
       , mousePressedInitialPos = ( 0, 0 )
       , mousePressedInitialBoard = ( 0, 0 )
@@ -94,12 +95,7 @@ init =
       , players = Dict.empty
       , currentPlayer = Nothing
       , currentCard =
-            Just
-                { corners = ( Neutral, Neutral, Tournament )
-                , edges = allNeutral
-                , center = Neutral
-                }
-            -- Nothing
+            Array.get 2 Cards.initialLandscapeDeck
       }
     , requestCharSize ( defaultLandscapeFontName, defaultLandscapeFontSize )
     )
@@ -174,20 +170,10 @@ view model =
                 , landscapeStyle model
                 , id "landscape"
                 ]
-                (model.board
-                    |>
-                        Render.render
-                    |>
-                        (if model.mousePressed then
-                            identity
-                         else
-                            Render.pokePixel mouseCurrentCharPos { char = '@', color = Color.red }
-                        )
-                    -- |> Render.renderCell model.hoveredCell { left = Just backCard, right = Just backCard }
-                    |>
-                        Render.renderCell model.hoveredCell { left = model.currentCard, right = model.currentCard }
-                    |>
-                        Render.renderMapToHtml model.topLeft
+                (Dict.empty
+                    |> Render.render model.board
+                    |> Render.renderCell model.hoveredCell { left = model.currentCard, right = model.currentCard }
+                    |> Render.renderMapToHtml model.topLeft
                 )
             ]
 
