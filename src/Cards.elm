@@ -52,6 +52,42 @@ type alias LandscapeCard =
     }
 
 
+type alias LandscapeCardRef =
+    { index : Int
+    , rot : Int
+    }
+
+
+rotateCardRefLeft : LandscapeCardRef -> LandscapeCardRef
+rotateCardRefLeft cardRef =
+    { cardRef | rot = (cardRef.rot - 1) % 3 }
+
+
+rotateCardRefRight : LandscapeCardRef -> LandscapeCardRef
+rotateCardRefRight cardRef =
+    { cardRef | rot = (cardRef.rot + 1) % 3 }
+
+
+clampToDeckLimits : Int -> Int
+clampToDeckLimits =
+    clamp 0 <| Array.length initialLandscapeDeck - 1
+
+
+shiftCardRefLeft : LandscapeCardRef -> LandscapeCardRef
+shiftCardRefLeft cardRef =
+    { cardRef | index = clampToDeckLimits (cardRef.index - 1) }
+
+
+shiftCardRefRight : LandscapeCardRef -> LandscapeCardRef
+shiftCardRefRight cardRef =
+    { cardRef | index = clampToDeckLimits (cardRef.index + 1) }
+
+
+cardRefToCard : LandscapeCardRef -> Maybe LandscapeCard
+cardRefToCard cardRef =
+    Array.get cardRef.index initialLandscapeDeck `Maybe.andThen` (rotateLandscapeCard cardRef.rot >> Just)
+
+
 colorToElmColor : Color -> Color.Color
 colorToElmColor c =
     case c of
@@ -334,3 +370,41 @@ compatibleSides ( side1corner1, side1edge, side1corner2 ) maybeSide2 =
             (side1corner1 == side2corner2)
                 && (side1edge == side2edge)
                 && (side1corner2 == side2corner1)
+
+
+getCardIndex : LandscapeCard -> Maybe Int
+getCardIndex card =
+    let
+        toto : List LandscapeCard -> LandscapeCard -> Int -> Maybe Int
+        toto list card index =
+            case list of
+                head :: tail ->
+                    if head == card || head == rotateLandscapeCard 1 card || head == rotateLandscapeCard 2 card then
+                        Just index
+                    else
+                        toto tail card (index + 1)
+
+                [] ->
+                    Nothing
+    in
+        toto (Array.toList initialLandscapeDeck) card 0
+
+
+getPreviousCard : LandscapeCard -> Maybe LandscapeCard
+getPreviousCard card =
+    case getCardIndex card of
+        Nothing ->
+            Nothing
+
+        Just index ->
+            Array.get ((index - 1) % Array.length initialLandscapeDeck) initialLandscapeDeck
+
+
+getNextCard : LandscapeCard -> Maybe LandscapeCard
+getNextCard card =
+    case getCardIndex card of
+        Nothing ->
+            Nothing
+
+        Just index ->
+            Array.get ((index + 1) % Array.length initialLandscapeDeck) initialLandscapeDeck

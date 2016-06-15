@@ -113,3 +113,12 @@ getPossibleMoves board card =
                 Dict.foldl (getPossibleMovesForBinome col) moves column
     in
         Dict.foldl getPossibleMovesForCol [] board.landscapes
+
+
+movesToBoard : List Move -> LandscapeCard -> Board
+movesToBoard moves card =
+    let
+        pokeCard move board =
+            setLandscape move.coord (rotateLandscapeCard move.rot card) board
+    in
+        List.foldr pokeCard { landscapes = Dict.empty } moves

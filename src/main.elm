@@ -9,7 +9,7 @@ import Html.App as Html
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Color
-import Keyboard
+import Keyboard exposing (KeyCode)
 import Mouse
 import Time
 import Cards exposing (..)
@@ -47,7 +47,7 @@ type alias Model =
     , hoveredCell : CellCoordinates
     , players : Dict.Dict String Player
     , currentPlayer : Maybe String
-    , currentCard : Maybe LandscapeCard
+    , currentCard : Maybe LandscapeCardRef
     }
 
 
@@ -95,7 +95,10 @@ init =
       , players = Dict.empty
       , currentPlayer = Nothing
       , currentCard =
-            Array.get 2 Cards.initialLandscapeDeck
+            Just
+                { index = 1
+                , rot = 0
+                }
       }
     , requestCharSize ( defaultLandscapeFontName, defaultLandscapeFontSize )
     )
@@ -151,8 +154,13 @@ view model =
         mouseCurrentCharPos =
             mousePosToCharPos model.landscapeCharSize model.topLeft model.mouseCurrentPos
 
-        l =
-            Debug.log "moves" (Rules.getPossibleMoves model.board (Maybe.withDefault backCard model.currentCard))
+        currentCard =
+            model.currentCard
+                `Maybe.andThen` cardRefToCard
+                |> Maybe.withDefault backCard
+
+        possibleMoves =
+            Rules.getPossibleMoves model.board currentCard
     in
         div
             [ style
@@ -171,8 +179,10 @@ view model =
                 , id "landscape"
                 ]
                 (Dict.empty
+                    |> Render.render (Rules.movesToBoard possibleMoves currentCard)
+                    |> Render.grayIt
                     |> Render.render model.board
-                    |> Render.renderCell model.hoveredCell { left = model.currentCard, right = model.currentCard }
+                    |> Render.renderCell model.hoveredCell { left = Just currentCard, right = Just currentCard }
                     |> Render.renderMapToHtml model.topLeft
                 )
             ]
@@ -182,6 +192,7 @@ type Msg
     = Move Int Int
     | MousePress Bool
     | MouseMove { x : Int, y : Int }
+    | KeyDown KeyCode
     | CharSizeResult ( Float, Float )
     | LandscapeMousePos ( Int, Int )
     | RequestCharSize
@@ -332,6 +343,33 @@ mouseMove ( x, y ) model =
             { model' | hoveredCell = getHoveredCell model' }
 
 
+rotateCurrentCard : Model -> KeyCode -> Model
+rotateCurrentCard model code =
+    let
+        card =
+            model.currentCard
+    in
+        case code of
+            37 ->
+                { model | currentCard = Maybe.map rotateCardRefLeft model.currentCard }
+
+            39 ->
+                { model | currentCard = Maybe.map rotateCardRefRight model.currentCard }
+
+            _ ->
+                model
+
+
+toPreviousCard : Model -> Model
+toPreviousCard model =
+    { model | currentCard = Maybe.map shiftCardRefLeft model.currentCard }
+
+
+toNextCard : Model -> Model
+toNextCard model =
+    { model | currentCard = Maybe.map shiftCardRefRight model.currentCard }
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
@@ -366,6 +404,19 @@ update msg model =
             }
                 ! []
 
+        KeyDown code ->
+            (case code of
+                38 ->
+                    toPreviousCard model
+
+                40 ->
+                    toNextCard model
+
+                _ ->
+                    rotateCurrentCard model code
+            )
+                ! []
+
 
 spaceToInc : { x : Int, y : Int } -> Msg
 spaceToInc { x, y } =
@@ -389,5 +440,6 @@ subscriptions model =
     Sub.batch
         [ charSizeResult CharSizeResult
         , Mouse.moves MouseMove
+        , Keyboard.downs KeyDown
         , landscapeMousePosResult LandscapeMousePos
         ]

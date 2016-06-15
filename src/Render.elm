@@ -6,6 +6,7 @@ module Render
         , pokeLeftCell
         , pokePixel
         , pokeRightCell
+        , grayIt
         )
 
 import Cards
@@ -351,16 +352,13 @@ renderMapToHtml ( left, top ) renderMap =
         renderItems
 
 
+grayIt : RenderMap -> RenderMap
+grayIt renderMap =
+    let
+        grayCell _ cell =
+            { char = cell.char, color = Color.rgb 220 220 220 }
 
-----------------------------------------------------
--- renderRowsSince2 : Int -> (Int, Int) -> RenderMap -> String
--- renderRowsSince2 left
--- renderMapToText2 : ( Int, Int ) -> ( Int, Int ) -> RenderMap -> String
--- renderMapToText2 ( left, top ) ( width, height ) renderMap =
---     let
---         str = ""
---         ( oldRowIndex, str' ) =
---             Dict.filter (\rowIndex _ -> rowIndex >= top && rowIndex <= top + height) renderMap
---                 |> Dict.foldl (renderRowsSince2 left) ( top - 1, str )
---     in
---         str'
+        grayColumn _ column =
+            Dict.map grayCell column
+    in
+        Dict.map grayColumn renderMap

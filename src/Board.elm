@@ -42,8 +42,7 @@ type alias Grid a =
 
 
 type alias Board =
-    { landscapes : Grid LandscapeCard
-    }
+    { landscapes : Grid LandscapeCard }
 
 
 init : CellPosition -> Board
@@ -126,22 +125,3 @@ getLandscape coord board =
 setLandscape : CellCoordinates -> LandscapeCard -> Board -> Board
 setLandscape coord card board =
     { board | landscapes = (setCell coord card board.landscapes) }
-
-
-
--- initCellWithLandscapeCard : Board -> CellCoordinates -> Int -> Cell
--- initCellWithLandscapeCard board ( x, y, pos ) cardIndex =
---     let
---         maybeCard = Array.get cardIndex initialLandscapeDeck
---     in
---         case maybeCard of
---             Nothing ->
---                 {}
--- computeCellCard : Maybe Cell -> Maybe LandscapeCard
--- computeCellCard maybeCell =
---     case maybeCell of
---         Nothing ->
---             Nothing
---         Just cell ->
---             Array.get cell.landscapeIndex initialLandscapeDeck
---                 |> Maybe.map (rotateLandscapeCard cell.rotation)
