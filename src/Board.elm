@@ -45,19 +45,19 @@ type alias Board =
     { landscapes : Grid LandscapeCard }
 
 
-init : CellPosition -> Board
-init pos =
+init : CellPosition -> Int -> Board
+init pos rot =
     let
         binome =
             case pos of
                 CellLeft ->
-                    { left = Array.get 0 initialLandscapeDeck
+                    { left = Array.get 0 initialLandscapeDeck |> Maybe.map (rotateLandscapeCard rot)
                     , right = Nothing
                     }
 
                 CellRight ->
                     { left = Nothing
-                    , right = Array.get 0 initialLandscapeDeck
+                    , right = Array.get 0 initialLandscapeDeck |> Maybe.map (rotateLandscapeCard rot)
                     }
     in
         { landscapes =

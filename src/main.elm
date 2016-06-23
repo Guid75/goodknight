@@ -80,7 +80,7 @@ defaultLandscapeFontSize =
 init : ( Model, Cmd Msg )
 init =
     ( { board =
-            Board.init Board.CellLeft
+            Board.init Board.CellLeft 0
                 |> tmpInitBoard
       , topLeft = ( -10, -14 )
       , mousePressed = False
