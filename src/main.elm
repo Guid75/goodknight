@@ -343,31 +343,23 @@ mouseMove ( x, y ) model =
             { model' | hoveredCell = getHoveredCell model' }
 
 
-rotateCurrentCard : Model -> KeyCode -> Model
-rotateCurrentCard model code =
-    let
-        card =
-            model.currentCard
-    in
-        case code of
-            37 ->
-                { model | currentCard = Maybe.map rotateCardRefLeft model.currentCard }
+keyToCardRefModifier : Int -> (LandscapeCardRef -> LandscapeCardRef)
+keyToCardRefModifier keyCode =
+    case keyCode of
+        37 ->
+            rotateCardRefLeft
 
-            39 ->
-                { model | currentCard = Maybe.map rotateCardRefRight model.currentCard }
+        38 ->
+            shiftCardRefLeft
 
-            _ ->
-                model
+        39 ->
+            rotateCardRefRight
 
+        40 ->
+            shiftCardRefRight
 
-toPreviousCard : Model -> Model
-toPreviousCard model =
-    { model | currentCard = Maybe.map shiftCardRefLeft model.currentCard }
-
-
-toNextCard : Model -> Model
-toNextCard model =
-    { model | currentCard = Maybe.map shiftCardRefRight model.currentCard }
+        _ ->
+            identity
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -405,16 +397,7 @@ update msg model =
                 ! []
 
         KeyDown code ->
-            (case code of
-                38 ->
-                    toPreviousCard model
-
-                40 ->
-                    toNextCard model
-
-                _ ->
-                    rotateCurrentCard model code
-            )
+            { model | currentCard = Maybe.map (keyToCardRefModifier code) model.currentCard }
                 ! []
 
 
