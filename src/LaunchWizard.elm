@@ -8,21 +8,25 @@ import Debug
 import String
 import Result
 import Maybe
+import Array exposing (Array)
 
 
 type alias Model =
     { playerCount : Int
+    , names : Array String
     }
 
 
 init : Model
 init =
     { playerCount = 2
+    , names = Array.initialize 4 (always "Foobar")
     }
 
 
 type Msg
     = SelectPlayerCount Int
+    | ChangeName Int String
     | Start
 
 
@@ -40,10 +44,14 @@ parseIntWithDefault str =
 
 playerInput : Model -> Int -> Html Msg
 playerInput model index =
-    div []
-        [ text <| "Player " ++ (toString <| index + 1)
-        , input [ value "toto" ] []
-        ]
+    let
+        name =
+            Maybe.withDefault "Toto" <| Array.get index model.names
+    in
+        div []
+            [ text <| "Player " ++ (toString <| index + 1)
+            , input [ value name, onInput (ChangeName index) ] []
+            ]
 
 
 view : Model -> Html Msg
@@ -74,6 +82,9 @@ update msg model =
     case msg of
         SelectPlayerCount c ->
             ( { model | playerCount = c }, NoOp )
+
+        ChangeName playerIndex newName ->
+            ( { model | names = Array.set playerIndex newName model.names }, NoOp )
 
         Start ->
             ( model, Launch )
