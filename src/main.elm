@@ -16,6 +16,7 @@ import Cards exposing (..)
 import Board exposing (setCell, Board, CellCoordinates, CellPosition(..))
 import Rules
 import Render
+import LaunchWizard
 
 
 main =
@@ -45,9 +46,11 @@ type alias Model =
     , landscapeFontSize : Int
     , landscapeCharSize : FloatSize
     , hoveredCell : CellCoordinates
+    , running : Bool
     , players : Dict.Dict String Player
     , currentPlayer : Maybe String
     , currentCard : Maybe LandscapeCardRef
+    , wizardModel : LaunchWizard.Model
     }
 
 
@@ -99,6 +102,8 @@ init =
                 { index = 1
                 , rot = 0
                 }
+      , running = False
+      , wizardModel = LaunchWizard.init
       }
     , requestCharSize ( defaultLandscapeFontName, defaultLandscapeFontSize )
     )
@@ -148,8 +153,8 @@ leftItems =
         |> Render.renderMapToHtml ( 0, 0 )
 
 
-view : Model -> Html Msg
-view model =
+viewBoard : Model -> Html Msg
+viewBoard model =
     let
         mouseCurrentCharPos =
             mousePosToCharPos model.landscapeCharSize model.topLeft model.mouseCurrentPos
@@ -188,6 +193,19 @@ view model =
             ]
 
 
+viewWizard : Model -> Html Msg
+viewWizard model =
+    Html.map WizardMsg (LaunchWizard.view model.wizardModel)
+
+
+view : Model -> Html Msg
+view model =
+    if model.running then
+        viewBoard model
+    else
+        viewWizard model
+
+
 type Msg
     = Move Int Int
     | MousePress Bool
@@ -196,6 +214,7 @@ type Msg
     | CharSizeResult ( Float, Float )
     | LandscapeMousePos ( Int, Int )
     | RequestCharSize
+    | WizardMsg LaunchWizard.Msg
     | NoOp
 
 
@@ -398,6 +417,10 @@ update msg model =
 
         KeyDown code ->
             { model | currentCard = Maybe.map (keyToCardRefModifier code) model.currentCard }
+                ! []
+
+        WizardMsg msg ->
+            { model | wizardModel = LaunchWizard.update msg model.wizardModel }
                 ! []
 
 

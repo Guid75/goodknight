@@ -42,6 +42,9 @@
 
     function requestLandscapeMousePos(pos) {
         var landscape = document.getElementById('landscape');
+        if (!landscape) {
+            return
+        }
         var rect = landscape.getBoundingClientRect();
         // back to Elm
         myapp.ports.landscapeMousePosResult.send([ pos[0] - rect.left, pos[1] - rect.top ]);
