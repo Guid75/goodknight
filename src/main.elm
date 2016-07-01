@@ -5,7 +5,7 @@ import Dict
 import Array
 import Result
 import Html exposing (..)
-import Html.App as Html
+import Html.App as App
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Color
@@ -20,7 +20,7 @@ import LaunchWizard
 
 
 main =
-    Html.program
+    App.program
         { init = init
         , view = view
         , update = update
@@ -195,7 +195,7 @@ viewBoard model =
 
 viewWizard : Model -> Html Msg
 viewWizard model =
-    Html.map WizardMsg (LaunchWizard.view model.wizardModel)
+    LaunchWizard.view model.wizardModel |> App.map WizardMsg
 
 
 view : Model -> Html Msg
