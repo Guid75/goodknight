@@ -420,8 +420,22 @@ update msg model =
                 ! []
 
         WizardMsg msg ->
-            { model | wizardModel = LaunchWizard.update msg model.wizardModel }
-                ! []
+            handleWizardUpdate model msg
+
+
+handleWizardUpdate : Model -> LaunchWizard.Msg -> ( Model, Cmd Msg )
+handleWizardUpdate model msg =
+    let
+        ( newWizardModel, wizardMsg ) =
+            LaunchWizard.update msg model.wizardModel
+
+        newModel =
+            { model | wizardModel = newWizardModel }
+    in
+        if wizardMsg == LaunchWizard.Launch then
+            { newModel | running = True } ! []
+        else
+            newModel ! []
 
 
 spaceToInc : { x : Int, y : Int } -> Msg
