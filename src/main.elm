@@ -12,6 +12,7 @@ import Color
 import Keyboard exposing (KeyCode)
 import Mouse
 import Time
+import Random
 import Cards exposing (..)
 import Board exposing (setCell, Board, CellCoordinates, CellPosition(..))
 import Rules
@@ -30,8 +31,13 @@ main =
 
 type alias Player =
     { name : String
-    , id : String
+    , actionCards : List ActionCard
     }
+
+
+initPlayer : String -> Player
+initPlayer name =
+    { name = name, actionCards = [ { colors = ( Cards.Red, Cards.Green ), action = Dragon } ] }
 
 
 type alias Model =
@@ -47,7 +53,7 @@ type alias Model =
     , landscapeCharSize : FloatSize
     , hoveredCell : CellCoordinates
     , running : Bool
-    , players : Dict.Dict String Player
+    , players : List Player
     , currentPlayer : Maybe String
     , currentCard : Maybe LandscapeCardRef
     , wizardModel : LaunchWizard.Model
@@ -58,6 +64,11 @@ type alias FloatSize =
     { w : Float
     , h : Float
     }
+
+
+launchGame : List String -> Model -> Model
+launchGame names model =
+    { model | running = True, players = List.map initPlayer names }
 
 
 tmpInitBoard : Board -> Board
@@ -82,54 +93,52 @@ defaultLandscapeFontSize =
 
 init : ( Model, Cmd Msg )
 init =
-    ( { board =
-            Board.init Board.CellLeft 0
-                |> tmpInitBoard
-      , topLeft = ( -10, -14 )
-      , mousePressed = False
-      , mousePressedInitialPos = ( 0, 0 )
-      , mousePressedInitialBoard = ( 0, 0 )
-      , mouseCurrentPos = ( 0, 0 )
-      , landscapeFontName = defaultLandscapeFontName
-      , landscapeFontSize = defaultLandscapeFontSize
-      , landscapeMousePos = ( 0, 0 )
-      , landscapeCharSize = { w = 7.5, h = 14.0 }
-      , hoveredCell = ( 0, 0, CellLeft )
-      , players = Dict.empty
-      , currentPlayer = Nothing
-      , currentCard =
-            Just
-                { index = 1
-                , rot = 0
-                }
-      , running = False
-      , wizardModel = LaunchWizard.init
-      }
-    , requestCharSize ( defaultLandscapeFontName, defaultLandscapeFontSize )
-    )
+    { board =
+        Board.init Board.CellLeft 0
+            |> tmpInitBoard
+    , topLeft = ( -10, -14 )
+    , mousePressed = False
+    , mousePressedInitialPos = ( 0, 0 )
+    , mousePressedInitialBoard = ( 0, 0 )
+    , mouseCurrentPos = ( 0, 0 )
+    , landscapeFontName = defaultLandscapeFontName
+    , landscapeFontSize = defaultLandscapeFontSize
+    , landscapeMousePos = ( 0, 0 )
+    , landscapeCharSize = { w = 7.5, h = 14.0 }
+    , hoveredCell = ( 0, 0, CellLeft )
+    , players = []
+    , currentPlayer = Nothing
+    , currentCard =
+        Just
+            { index = 1
+            , rot = 0
+            }
+    , running = False
+    , wizardModel = LaunchWizard.init
+    }
+        ! [ requestCharSize ( defaultLandscapeFontName, defaultLandscapeFontSize )
+          , Random.generate GetRandomNumbers <| Random.list 10 (Random.int 0 100)
+          ]
+
+
+deck =
+    getRandomMixedDeck (Random.initialSeed 3) |> Debug.log "deck"
 
 
 landscapeStyle : Model -> Html.Attribute msg
 landscapeStyle model =
-    let
-        backgroundColor =
-            if model.mousePressed then
-                "#FFE0E0"
-            else
-                "#FFFFFF"
-    in
-        style
-            [ ( "overflow", "hidden" )
-            , ( "font-family", model.landscapeFontName )
-            , ( "font-size", (toString model.landscapeFontSize) ++ "px" )
-            , ( "flex", "1" )
-            , ( "position", "relative" )
-            , ( "background-color", backgroundColor )
-            , ( "-webkit-user-select", "none" )
-            , ( "text-rendering", "optimizeLegibility" )
-            , ( "cursor", "grab" )
-            , ( "margin", "0px" )
-            ]
+    style
+        [ ( "overflow", "hidden" )
+        , ( "font-family", model.landscapeFontName )
+        , ( "font-size", (toString model.landscapeFontSize) ++ "px" )
+        , ( "flex", "1" )
+        , ( "position", "relative" )
+        , ( "background-color", "#FFFFFF" )
+        , ( "-webkit-user-select", "none" )
+        , ( "text-rendering", "optimizeLegibility" )
+        , ( "cursor", "grab" )
+        , ( "margin", "0px" )
+        ]
 
 
 dashboardStyle : Html.Attribute msg
@@ -141,6 +150,15 @@ dashboardStyle =
         , ( "-webkit-user-select", "none" )
         , ( "width", "7em" )
         , ( "margin", "0px" )
+        ]
+
+
+topBarStyle : Model -> Html.Attribute msg
+topBarStyle model =
+    style
+        [ ( "background-color", "#E0E0E0" )
+        , ( "font-family", model.landscapeFontName )
+        , ( "font-size", (toString model.landscapeFontSize) ++ "px" )
         ]
 
 
@@ -171,12 +189,12 @@ viewBoard model =
             [ style
                 [ ( "overflow", "hidden" )
                 , ( "display", "flex" )
-                , ( "flex-direction", "row" )
+                , ( "flex-direction", "column" )
                 , ( "height", "100vh" )
                 ]
             ]
-            [ pre [ dashboardStyle ]
-                leftItems
+            [ div [ topBarStyle model ]
+                [ text "Current player: Guillaume" ]
             , pre
                 [ onMouseDown (MousePress True)
                 , onMouseUp (MousePress False)
@@ -214,6 +232,7 @@ type Msg
     | CharSizeResult ( Float, Float )
     | LandscapeMousePos ( Int, Int )
     | RequestCharSize
+    | GetRandomNumbers (List Int)
     | WizardMsg LaunchWizard.Msg
     | NoOp
 
@@ -419,6 +438,9 @@ update msg model =
             { model | currentCard = Maybe.map (keyToCardRefModifier code) model.currentCard }
                 ! []
 
+        GetRandomNumbers numbers ->
+            model ! []
+
         WizardMsg msg ->
             handleWizardUpdate model msg
 
@@ -432,10 +454,12 @@ handleWizardUpdate model msg =
         newModel =
             { model | wizardModel = newWizardModel }
     in
-        if wizardMsg == LaunchWizard.Launch then
-            { newModel | running = True } ! []
-        else
-            newModel ! []
+        case wizardMsg of
+            Nothing ->
+                newModel ! []
+
+            Just (LaunchWizard.Launch names) ->
+                launchGame names newModel ! []
 
 
 spaceToInc : { x : Int, y : Int } -> Msg

@@ -31,8 +31,7 @@ type Msg
 
 
 type OutputMsg
-    = NoOp
-    | Launch
+    = Launch (List String)
 
 
 parseIntWithDefault : String -> Int
@@ -77,14 +76,14 @@ view model =
         )
 
 
-update : Msg -> Model -> ( Model, OutputMsg )
+update : Msg -> Model -> ( Model, Maybe OutputMsg )
 update msg model =
     case msg of
         SelectPlayerCount c ->
-            ( { model | playerCount = c }, NoOp )
+            ( { model | playerCount = c }, Nothing )
 
         ChangeName playerIndex newName ->
-            ( { model | names = Array.set playerIndex newName model.names }, NoOp )
+            ( { model | names = Array.set playerIndex newName model.names }, Nothing )
 
         Start ->
-            ( model, Launch )
+            ( model, Just <| Launch <| Array.toList model.names )

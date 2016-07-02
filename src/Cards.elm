@@ -1,6 +1,7 @@
 module Cards exposing (..)
 
-import Array
+import Array exposing (Array)
+import Random
 import Color
 
 
@@ -20,13 +21,19 @@ type LandscapeItem
     | CardBack
 
 
-type Challenge
-    = TreasureChallenge
-    | GiantChallenge
-    | WitchChallenge
-    | DragonChallenge
-    | ThiefChallenge
-    | PrincessChallenge
+type Action
+    = Treasure
+    | Giant
+    | Witch
+    | Dragon
+    | Thief
+    | Princess
+
+
+type alias ActionCard =
+    { colors : ( Color, Color )
+    , action : Action
+    }
 
 
 type alias LandscapeCorners =
@@ -125,7 +132,7 @@ backCard =
     }
 
 
-initialLandscapeDeck : Array.Array LandscapeCard
+initialLandscapeDeck : Array LandscapeCard
 initialLandscapeDeck =
     Array.fromList
         [ { corners = ( Neutral, Tournament, Neutral )
@@ -275,35 +282,71 @@ initialLandscapeDeck =
         ]
 
 
-type alias ChallengeCard =
-    { colors : ( Color, Color )
-    , challenge : Challenge
-    }
+{-| Generate a sequence of successive randomized indexes for a certain amount of items.
+
+ generateIndexes mySeed 3 == [1, 0]
+ generateIndexes mySeed 5 == [1, 3, 0, 1]
+-}
+generateIndexes : Random.Seed -> Int -> List Int
+generateIndexes seed count =
+    let
+        generate limit ( indexes, seed ) =
+            let
+                ( newValue, newSeed ) =
+                    Random.step (Random.int 0 limit) seed
+            in
+                ( newValue :: indexes, newSeed )
+    in
+        fst <| List.foldl generate ( [], seed ) [1..count - 1]
+
+
+{-| Shakes the initial deck to get a new one
+-}
+getRandomMixedDeck : Random.Seed -> Array LandscapeCard
+getRandomMixedDeck seed =
+    let
+        indexes =
+            generateIndexes seed <| Array.length initialLandscapeDeck
+
+        reducer index ( deckToEmpty, deckToFill ) =
+            let
+                card =
+                    Maybe.withDefault backCard <| Array.get index deckToEmpty
+
+                beforeArray =
+                    Array.slice 0 index deckToEmpty
+
+                afterArray =
+                    Array.slice (index + 1) (Array.length deckToEmpty) deckToEmpty
+            in
+                ( Array.append beforeArray afterArray, Array.push card deckToFill )
+    in
+        snd <| List.foldl reducer ( initialLandscapeDeck, Array.empty ) indexes
 
 
 
--- 3 same cards by challenge => 18 challenge cards
+-- 3 same cards by action => 18 action cards
 
 
-challengeCards : List ChallengeCard
-challengeCards =
+actionCards : List ActionCard
+actionCards =
     [ { colors = ( Yellow, Blue )
-      , challenge = GiantChallenge
+      , action = Giant
       }
     , { colors = ( Green, Blue )
-      , challenge = TreasureChallenge
+      , action = Treasure
       }
     , { colors = ( Blue, Red )
-      , challenge = WitchChallenge
+      , action = Witch
       }
     , { colors = ( Green, Red )
-      , challenge = DragonChallenge
+      , action = Dragon
       }
     , { colors = ( Yellow, Green )
-      , challenge = ThiefChallenge
+      , action = Thief
       }
     , { colors = ( Yellow, Red )
-      , challenge = PrincessChallenge
+      , action = Princess
       }
     ]
 
