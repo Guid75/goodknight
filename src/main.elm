@@ -199,7 +199,7 @@ viewBoard model =
                 ]
             ]
             [ div [ topBarStyle model ]
-                [ text "Current player: Guillaume" ]
+                [ text <| "Current player: " ++ (Maybe.withDefault "<unamed player>" model.currentPlayer) ]
             , pre
                 [ onMouseDown (MousePress True)
                 , onMouseUp (MousePress False)
@@ -461,6 +461,7 @@ launchGame names deck model =
         | running = True
         , players = List.map initPlayer names
         , currentDeck = Array.toList deck
+        , currentPlayer = List.head names
     }
         ! []
 
