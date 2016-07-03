@@ -2,7 +2,7 @@ port module GoodKnight exposing (..)
 
 import Debug
 import Dict
-import Array
+import Array exposing (Array)
 import Result
 import Html exposing (..)
 import Html.App as App
@@ -13,6 +13,7 @@ import Keyboard exposing (KeyCode)
 import Mouse
 import Time
 import Random
+import Random.Array
 import Cards exposing (..)
 import Board exposing (setCell, Board, CellCoordinates, CellPosition(..))
 import Rules
@@ -117,12 +118,13 @@ init =
     , wizardModel = LaunchWizard.init
     }
         ! [ requestCharSize ( defaultLandscapeFontName, defaultLandscapeFontSize )
-          , Random.generate GetRandomNumbers <| Random.list 10 (Random.int 0 100)
+          , Random.generate GetRandomDeck <| Random.Array.shuffle initialLandscapeDeck
           ]
 
 
-deck =
-    getRandomMixedDeck (Random.initialSeed 3) |> Debug.log "deck"
+
+-- deck =
+--     getRandomMixedDeck (Random.initialSeed 3) |> Debug.log "deck"
 
 
 landscapeStyle : Model -> Html.Attribute msg
@@ -232,7 +234,7 @@ type Msg
     | CharSizeResult ( Float, Float )
     | LandscapeMousePos ( Int, Int )
     | RequestCharSize
-    | GetRandomNumbers (List Int)
+    | GetRandomDeck LandscapeDeck
     | WizardMsg LaunchWizard.Msg
     | NoOp
 
@@ -438,8 +440,12 @@ update msg model =
             { model | currentCard = Maybe.map (keyToCardRefModifier code) model.currentCard }
                 ! []
 
-        GetRandomNumbers numbers ->
-            model ! []
+        GetRandomDeck deck ->
+            let
+                c =
+                    Debug.log "Random deck" deck
+            in
+                model ! []
 
         WizardMsg msg ->
             handleWizardUpdate model msg

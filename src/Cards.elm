@@ -58,6 +58,7 @@ type alias LandscapeCard =
     , center : LandscapeCenter
     }
 
+type alias LandscapeDeck = Array LandscapeCard
 
 type alias LandscapeCardRef =
     { index : Int
@@ -280,48 +281,6 @@ initialLandscapeDeck =
           , center = Neutral
           }
         ]
-
-
-{-| Generate a sequence of successive randomized indexes for a certain amount of items.
-
- generateIndexes mySeed 3 == [1, 0]
- generateIndexes mySeed 5 == [1, 3, 0, 1]
--}
-generateIndexes : Random.Seed -> Int -> List Int
-generateIndexes seed count =
-    let
-        generate limit ( indexes, seed ) =
-            let
-                ( newValue, newSeed ) =
-                    Random.step (Random.int 0 limit) seed
-            in
-                ( newValue :: indexes, newSeed )
-    in
-        fst <| List.foldl generate ( [], seed ) [1..count - 1]
-
-
-{-| Shakes the initial deck to get a new one
--}
-getRandomMixedDeck : Random.Seed -> Array LandscapeCard
-getRandomMixedDeck seed =
-    let
-        indexes =
-            generateIndexes seed <| Array.length initialLandscapeDeck
-
-        reducer index ( deckToEmpty, deckToFill ) =
-            let
-                card =
-                    Maybe.withDefault backCard <| Array.get index deckToEmpty
-
-                beforeArray =
-                    Array.slice 0 index deckToEmpty
-
-                afterArray =
-                    Array.slice (index + 1) (Array.length deckToEmpty) deckToEmpty
-            in
-                ( Array.append beforeArray afterArray, Array.push card deckToFill )
-    in
-        snd <| List.foldl reducer ( initialLandscapeDeck, Array.empty ) indexes
 
 
 
