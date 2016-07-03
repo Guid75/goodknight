@@ -57,19 +57,28 @@ type alias Model =
     , players : List Player
     , currentPlayer : Maybe String
     , currentCard : Maybe LandscapeCardRef
+    , currentDeck : List LandscapeCard
     , wizardModel : LaunchWizard.Model
     }
+
+
+type Msg
+    = Move Int Int
+    | MousePress Bool
+    | MouseMove { x : Int, y : Int }
+    | KeyDown KeyCode
+    | CharSizeResult ( Float, Float )
+    | LandscapeMousePos ( Int, Int )
+    | RequestCharSize
+    | LaunchGame (List String) LandscapeDeck
+    | WizardMsg LaunchWizard.Msg
+    | NoOp
 
 
 type alias FloatSize =
     { w : Float
     , h : Float
     }
-
-
-launchGame : List String -> Model -> Model
-launchGame names model =
-    { model | running = True, players = List.map initPlayer names }
 
 
 tmpInitBoard : Board -> Board
@@ -114,17 +123,11 @@ init =
             { index = 1
             , rot = 0
             }
+    , currentDeck = []
     , running = False
     , wizardModel = LaunchWizard.init
     }
-        ! [ requestCharSize ( defaultLandscapeFontName, defaultLandscapeFontSize )
-          , Random.generate GetRandomDeck <| Random.Array.shuffle initialLandscapeDeck
-          ]
-
-
-
--- deck =
---     getRandomMixedDeck (Random.initialSeed 3) |> Debug.log "deck"
+        ! [ requestCharSize ( defaultLandscapeFontName, defaultLandscapeFontSize ) ]
 
 
 landscapeStyle : Model -> Html.Attribute msg
@@ -224,19 +227,6 @@ view model =
         viewBoard model
     else
         viewWizard model
-
-
-type Msg
-    = Move Int Int
-    | MousePress Bool
-    | MouseMove { x : Int, y : Int }
-    | KeyDown KeyCode
-    | CharSizeResult ( Float, Float )
-    | LandscapeMousePos ( Int, Int )
-    | RequestCharSize
-    | GetRandomDeck LandscapeDeck
-    | WizardMsg LaunchWizard.Msg
-    | NoOp
 
 
 type alias Point =
@@ -440,12 +430,8 @@ update msg model =
             { model | currentCard = Maybe.map (keyToCardRefModifier code) model.currentCard }
                 ! []
 
-        GetRandomDeck deck ->
-            let
-                c =
-                    Debug.log "Random deck" deck
-            in
-                model ! []
+        LaunchGame names deck ->
+            launchGame names deck model
 
         WizardMsg msg ->
             handleWizardUpdate model msg
@@ -465,7 +451,18 @@ handleWizardUpdate model msg =
                 newModel ! []
 
             Just (LaunchWizard.Launch names) ->
-                launchGame names newModel ! []
+                newModel
+                    ! [ Random.generate (LaunchGame names) <| Random.Array.shuffle initialLandscapeDeck ]
+
+
+launchGame : List String -> LandscapeDeck -> Model -> ( Model, Cmd Msg )
+launchGame names deck model =
+    { model
+        | running = True
+        , players = List.map initPlayer names
+        , currentDeck = Array.toList deck
+    }
+        ! []
 
 
 spaceToInc : { x : Int, y : Int } -> Msg

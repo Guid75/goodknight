@@ -86,4 +86,9 @@ update msg model =
             ( { model | names = Array.set playerIndex newName model.names }, Nothing )
 
         Start ->
-            ( model, Just <| Launch <| Array.toList model.names )
+            ( model
+            , Array.toList model.names
+                |> List.take model.playerCount
+                |> Launch
+                |> Just
+            )

@@ -51,13 +51,13 @@ init pos rot =
         binome =
             case pos of
                 CellLeft ->
-                    { left = Array.get 0 initialLandscapeDeck |> Maybe.map (rotateLandscapeCard rot)
+                    { left = Just <| rotateLandscapeCard rot castleCard
                     , right = Nothing
                     }
 
                 CellRight ->
                     { left = Nothing
-                    , right = Array.get 0 initialLandscapeDeck |> Maybe.map (rotateLandscapeCard rot)
+                    , right = Just <| rotateLandscapeCard rot castleCard
                     }
     in
         { landscapes =

@@ -58,7 +58,10 @@ type alias LandscapeCard =
     , center : LandscapeCenter
     }
 
-type alias LandscapeDeck = Array LandscapeCard
+
+type alias LandscapeDeck =
+    Array LandscapeCard
+
 
 type alias LandscapeCardRef =
     { index : Int
@@ -133,14 +136,17 @@ backCard =
     }
 
 
+castleCard =
+    { corners = ( Neutral, Tournament, Neutral )
+    , edges = allNeutral
+    , center = Castle
+    }
+
+
 initialLandscapeDeck : Array LandscapeCard
 initialLandscapeDeck =
     Array.fromList
-        [ { corners = ( Neutral, Tournament, Neutral )
-          , edges = allNeutral
-          , center = Castle
-          }
-        , { corners = allNeutral
+        [ { corners = allNeutral
           , edges = ( Neutral, Cross Yellow, Cross Red )
           , center = Neutral
           }
