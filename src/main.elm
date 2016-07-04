@@ -56,7 +56,7 @@ type alias Model =
     , running : Bool
     , players : List Player
     , currentPlayer : Maybe String
-    , currentCard : Maybe LandscapeCardRef
+    , currentRot : Int
     , currentDeck : List LandscapeCard
     , wizardModel : LaunchWizard.Model
     }
@@ -105,7 +105,7 @@ init : ( Model, Cmd Msg )
 init =
     { board =
         Board.init Board.CellLeft 0
-            |> tmpInitBoard
+            -- |> tmpInitBoard
     , topLeft = ( -10, -14 )
     , mousePressed = False
     , mousePressedInitialPos = ( 0, 0 )
@@ -118,11 +118,7 @@ init =
     , hoveredCell = ( 0, 0, CellLeft )
     , players = []
     , currentPlayer = Nothing
-    , currentCard =
-        Just
-            { index = 1
-            , rot = 0
-            }
+    , currentRot = 0
     , currentDeck = []
     , running = False
     , wizardModel = LaunchWizard.init
@@ -183,9 +179,9 @@ viewBoard model =
             mousePosToCharPos model.landscapeCharSize model.topLeft model.mouseCurrentPos
 
         currentCard =
-            model.currentCard
-                `Maybe.andThen` cardRefToCard
+            List.head model.currentDeck
                 |> Maybe.withDefault backCard
+                |> rotateLandscapeCard model.currentRot
 
         possibleMoves =
             Rules.getPossibleMoves model.board currentCard
@@ -373,23 +369,21 @@ mouseMove ( x, y ) model =
             { model' | hoveredCell = getHoveredCell model' }
 
 
-keyToCardRefModifier : Int -> (LandscapeCardRef -> LandscapeCardRef)
-keyToCardRefModifier keyCode =
+handleKeyDown : Int -> Model -> ( Model, Cmd Msg )
+handleKeyDown keyCode model =
     case keyCode of
         37 ->
-            rotateCardRefLeft
+            { model | currentRot = (model.currentRot - 1) % 3 } ! []
 
-        38 ->
-            shiftCardRefLeft
-
+        -- 38 ->
+        --     shiftCardRefLeft
         39 ->
-            rotateCardRefRight
+            { model | currentRot = (model.currentRot + 1) % 3 } ! []
 
-        40 ->
-            shiftCardRefRight
-
+        -- 40 ->
+        --     shiftCardRefRight
         _ ->
-            identity
+            model ! []
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -427,8 +421,7 @@ update msg model =
                 ! []
 
         KeyDown code ->
-            { model | currentCard = Maybe.map (keyToCardRefModifier code) model.currentCard }
-                ! []
+            handleKeyDown code model
 
         LaunchGame names deck ->
             launchGame names deck model

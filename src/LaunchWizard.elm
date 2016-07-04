@@ -17,10 +17,15 @@ type alias Model =
     }
 
 
+defaultNames : Array String
+defaultNames =
+    Array.fromList [ "Alice", "Georges", "Daniel", "Marguerite" ]
+
+
 init : Model
 init =
     { playerCount = 2
-    , names = Array.initialize 4 (always "Foobar")
+    , names = defaultNames
     }
 
 
