@@ -70,6 +70,7 @@ type Msg
     | CharSizeResult ( Float, Float )
     | LandscapeMousePos ( Int, Int )
     | RequestCharSize
+    | BoundingClientRect ClientRect
     | LaunchGame (List String) LandscapeDeck
     | WizardMsg LaunchWizard.Msg
     | NoOp
@@ -105,8 +106,8 @@ init : ( Model, Cmd Msg )
 init =
     { board =
         Board.init Board.CellLeft 0
-            -- |> tmpInitBoard
-    , topLeft = ( -10, -14 )
+        -- |> tmpInitBoard
+    , topLeft = ( 0, 0 )
     , mousePressed = False
     , mousePressedInitialPos = ( 0, 0 )
     , mousePressedInitialBoard = ( 0, 0 )
@@ -123,7 +124,9 @@ init =
     , running = False
     , wizardModel = LaunchWizard.init
     }
-        ! [ requestCharSize ( defaultLandscapeFontName, defaultLandscapeFontSize ) ]
+        ! [ requestCharSize ( defaultLandscapeFontName, defaultLandscapeFontSize )
+          , Random.generate (LaunchGame [ "toto", "titi" ]) <| Random.Array.shuffle initialLandscapeDeck
+          ]
 
 
 landscapeStyle : Model -> Html.Attribute msg
@@ -429,6 +432,27 @@ update msg model =
         WizardMsg msg ->
             handleWizardUpdate model msg
 
+        BoundingClientRect clientRect ->
+            handleBoundingClientRect clientRect model
+
+
+handleBoundingClientRect : ClientRect -> Model -> ( Model, Cmd Msg )
+handleBoundingClientRect clientRect model =
+    if clientRect.id == "landscape" then
+        let
+            triangleSize =
+                triangleBoundingSize { w = model.landscapeCharSize.w, h = model.landscapeCharSize.h }
+
+            l =
+                round <| ((clientRect.rect.width - triangleSize.w) / 2.0) / model.landscapeCharSize.w
+
+            t =
+                round <| ((clientRect.rect.height - triangleSize.h) / 2.0) / model.landscapeCharSize.h
+        in
+            { model | topLeft = ( -l, -t ) } ! []
+    else
+        model ! []
+
 
 handleWizardUpdate : Model -> LaunchWizard.Msg -> ( Model, Cmd Msg )
 handleWizardUpdate model msg =
@@ -456,7 +480,7 @@ launchGame names deck model =
         , currentDeck = Array.toList deck
         , currentPlayer = List.head names
     }
-        ! []
+        ! [ requestBoundingClientRect "landscape" ]
 
 
 spaceToInc : { x : Int, y : Int } -> Msg
@@ -476,6 +500,25 @@ port requestLandscapeMousePos : ( Int, Int ) -> Cmd msg
 port landscapeMousePosResult : (( Int, Int ) -> msg) -> Sub msg
 
 
+port requestBoundingClientRect : String -> Cmd msg
+
+
+type alias ClientRect =
+    { id : String
+    , rect :
+        { left : Float
+        , top : Float
+        , right : Float
+        , bottom : Float
+        , width : Float
+        , height : Float
+        }
+    }
+
+
+port boundingClientRectResult : (ClientRect -> msg) -> Sub msg
+
+
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
@@ -483,4 +526,5 @@ subscriptions model =
         , Mouse.moves MouseMove
         , Keyboard.downs KeyDown
         , landscapeMousePosResult LandscapeMousePos
+        , boundingClientRectResult BoundingClientRect
         ]
