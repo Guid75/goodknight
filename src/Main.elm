@@ -175,6 +175,18 @@ leftItems =
         |> Render.renderMapToHtml ( 0, 0 )
 
 
+huvStyle : Model -> Html.Attribute msg
+huvStyle model =
+    style
+        [ ( "position", "absolute" )
+        , ( "right", "10" )
+        , ( "top", "10" )
+        , ( "width", "200" )
+        , ( "height", "400" )
+        , ( "background-color", "rgba(200, 200, 200, 0.8)" )
+        ]
+
+
 viewBoard : Model -> Html Msg
 viewBoard model =
     let
@@ -205,12 +217,17 @@ viewBoard model =
                 , landscapeStyle model
                 , id "landscape"
                 ]
-                (Dict.empty
-                    |> Render.render (Rules.movesToBoard possibleMoves currentCard)
-                    |> Render.grayIt
-                    |> Render.render model.board
-                    |> Render.renderCell model.hoveredCell { left = Just currentCard, right = Just currentCard }
-                    |> Render.renderMapToHtml model.topLeft
+                (List.append
+                    (Dict.empty
+                        |> Render.render (Rules.movesToBoard possibleMoves currentCard)
+                        |> Render.grayIt
+                        |> Render.render model.board
+                        |> Render.renderCell model.hoveredCell { left = Just currentCard, right = Just currentCard }
+                        |> Render.renderMapToHtml model.topLeft
+                    )
+                    [ div [ huvStyle model ]
+                        [ text "ok" ]
+                    ]
                 )
             ]
 
