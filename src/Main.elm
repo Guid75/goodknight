@@ -17,6 +17,7 @@ import Random.Array
 import Cards exposing (..)
 import Board exposing (setCell, Board, CellCoordinates, CellPosition(..))
 import Rules
+import PixelMap
 import Render
 import LaunchWizard
 
@@ -169,9 +170,9 @@ topBarStyle model =
 leftItems : List (Html msg)
 leftItems =
     Dict.empty
-        |> Render.pokeLeftCell ( 0, 1 ) backCard
-        |> Render.pokeLeftCell ( 1, 1 ) backCard
-        |> Render.pokeLeftCell ( 2, 1 ) backCard
+        |> PixelMap.pokeLeftCell ( 0, 1 ) backCard
+        |> PixelMap.pokeLeftCell ( 1, 1 ) backCard
+        |> PixelMap.pokeLeftCell ( 2, 1 ) backCard
         |> Render.renderMapToHtml ( 0, 0 )
 
 
@@ -219,14 +220,14 @@ viewBoard model =
                 ]
                 (List.append
                     (Dict.empty
-                        |> Render.render (Rules.movesToBoard possibleMoves currentCard)
-                        |> Render.grayIt
-                        |> Render.render model.board
-                        |> Render.renderCell model.hoveredCell { left = Just currentCard, right = Just currentCard }
+                        |> PixelMap.render (Rules.movesToBoard possibleMoves currentCard)
+                        |> PixelMap.grayIt
+                        |> PixelMap.render model.board
+                        |> PixelMap.renderCell model.hoveredCell { left = Just currentCard, right = Just currentCard }
                         |> Render.renderMapToHtml model.topLeft
                     )
                     [ div [ huvStyle model ]
-                        [ text "ok" ]
+                        [ text "Ok" ]
                     ]
                 )
             ]
