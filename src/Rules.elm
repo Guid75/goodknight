@@ -3,6 +3,7 @@ module Rules exposing (..)
 import Debug
 import Dict
 import Maybe
+import Array
 import Cards exposing (..)
 import Board exposing (..)
 
@@ -55,6 +56,7 @@ isPossibleMove board card ( col, row, pos ) rot =
 type alias Move =
     { coord : CellCoordinates
     , rots : List Int
+    , currentRot : Int
     }
 
 
@@ -94,7 +96,7 @@ getPossibleMovesArroundCell board card ( col, row, pos ) =
                     moves
 
                 rots ->
-                    { coord = coord, rots = rots } :: moves
+                    { coord = coord, rots = rots, currentRot = 0 } :: moves
     in
         List.foldl coordToMoves [] coordsToCheck
 
@@ -124,9 +126,11 @@ movesToBoard moves card =
     let
         pokeCard move board =
             let
-                headRot =
-                    Maybe.withDefault 0 <| List.head move.rots
+                nthRot =
+                    Array.fromList move.rots
+                        |> Array.get move.currentRot
+                        |> Maybe.withDefault 0
             in
-                setLandscape move.coord (rotateLandscapeCard headRot card) board
+                setLandscape move.coord (rotateLandscapeCard nthRot card) board
     in
         List.foldr pokeCard { landscapes = Dict.empty } moves

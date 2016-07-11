@@ -60,6 +60,7 @@ type alias Model =
     , currentRot : Int
     , currentDeck : List LandscapeCard
     , wizardModel : LaunchWizard.Model
+    , possibleMoves : List Rules.Move
     }
 
 
@@ -74,6 +75,7 @@ type Msg
     | BoundingClientRect ClientRect
     | LaunchGame (List String) LandscapeDeck
     | WizardMsg LaunchWizard.Msg
+    | RotTick Time.Time
     | NoOp
 
 
@@ -124,6 +126,7 @@ init =
     , currentDeck = []
     , running = False
     , wizardModel = LaunchWizard.init
+    , possibleMoves = []
     }
         ! [ requestCharSize ( defaultLandscapeFontName, defaultLandscapeFontSize )
           , Random.generate (LaunchGame [ "toto", "titi" ]) <| Random.Array.shuffle initialLandscapeDeck
@@ -197,10 +200,9 @@ viewBoard model =
         currentCard =
             List.head model.currentDeck
                 |> Maybe.withDefault backCard
-                |> rotateLandscapeCard model.currentRot
 
-        possibleMoves =
-            Rules.getPossibleMoves model.board currentCard
+        rotatedCurrentCard =
+            rotateLandscapeCard model.currentRot currentCard
     in
         div
             [ style
@@ -220,10 +222,10 @@ viewBoard model =
                 ]
                 (List.append
                     (Dict.empty
-                        |> PixelMap.render (Rules.movesToBoard possibleMoves currentCard)
+                        |> PixelMap.render (Rules.movesToBoard model.possibleMoves currentCard)
                         |> PixelMap.grayIt
                         |> PixelMap.render model.board
-                        |> PixelMap.renderCell model.hoveredCell { left = Just currentCard, right = Just currentCard }
+                        |> PixelMap.renderCell model.hoveredCell { left = Just rotatedCurrentCard, right = Just rotatedCurrentCard }
                         |> Render.renderMapToHtml model.topLeft
                     )
                     [ div [ huvStyle model ]
@@ -453,6 +455,19 @@ update msg model =
         BoundingClientRect clientRect ->
             handleBoundingClientRect clientRect model
 
+        RotTick _ ->
+            rotatePossibleMoves model
+
+
+rotatePossibleMoves : Model -> ( Model, Cmd Msg )
+rotatePossibleMoves model =
+    let
+        rotateMoves : List Rules.Move -> List Rules.Move
+        rotateMoves moves =
+            List.map (\move -> { move | currentRot = (move.currentRot + 1) % (List.length move.rots) }) moves
+    in
+        { model | possibleMoves = rotateMoves model.possibleMoves } ! []
+
 
 handleBoundingClientRect : ClientRect -> Model -> ( Model, Cmd Msg )
 handleBoundingClientRect clientRect model =
@@ -497,6 +512,7 @@ launchGame names deck model =
         , players = List.map initPlayer names
         , currentDeck = Array.toList deck
         , currentPlayer = List.head names
+        , possibleMoves = Rules.getPossibleMoves model.board <| Maybe.withDefault backCard <| Array.get 0 deck
     }
         ! [ requestBoundingClientRect "landscape" ]
 
@@ -545,4 +561,5 @@ subscriptions model =
         , Keyboard.downs KeyDown
         , landscapeMousePosResult LandscapeMousePos
         , boundingClientRectResult BoundingClientRect
+        , Time.every Time.second RotTick
         ]
