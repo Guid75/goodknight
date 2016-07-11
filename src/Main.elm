@@ -109,7 +109,7 @@ init : ( Model, Cmd Msg )
 init =
     { board =
         Board.init Board.CellLeft 0
-        -- |> tmpInitBoard
+            |> tmpInitBoard
     , topLeft = ( 0, 0 )
     , mousePressed = False
     , mousePressedInitialPos = ( 0, 0 )
@@ -456,17 +456,7 @@ update msg model =
             handleBoundingClientRect clientRect model
 
         RotTick _ ->
-            rotatePossibleMoves model
-
-
-rotatePossibleMoves : Model -> ( Model, Cmd Msg )
-rotatePossibleMoves model =
-    let
-        rotateMoves : List Rules.Move -> List Rules.Move
-        rotateMoves moves =
-            List.map (\move -> { move | currentRot = (move.currentRot + 1) % (List.length move.rots) }) moves
-    in
-        { model | possibleMoves = rotateMoves model.possibleMoves } ! []
+            { model | possibleMoves = Rules.rotateMoves model.possibleMoves } ! []
 
 
 handleBoundingClientRect : ClientRect -> Model -> ( Model, Cmd Msg )

@@ -134,3 +134,13 @@ movesToBoard moves card =
                 setLandscape move.coord (rotateLandscapeCard nthRot card) board
     in
         List.foldr pokeCard { landscapes = Dict.empty } moves
+
+
+rotateMoves : List Move -> List Move
+rotateMoves moves =
+    let
+        rotateMove : Move -> Move
+        rotateMove move =
+            { move | currentRot = (move.currentRot + 1) % (List.length move.rots) }
+    in
+        List.map rotateMove moves
