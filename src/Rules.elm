@@ -54,7 +54,7 @@ isPossibleMove board card ( col, row, pos ) rot =
 
 type alias Move =
     { coord : CellCoordinates
-    , rot : Int
+    , rots : List Int
     }
 
 
@@ -69,11 +69,6 @@ getPossibleRotationsByCoordinates board card coord =
             coord
     in
         List.filter isPossibleMove' [0..2]
-
-
-zipCoordToRot : CellCoordinates -> List Int -> List Move
-zipCoordToRot coord rots =
-    List.map (\rot -> { coord = coord, rot = rot }) rots
 
 
 getPossibleMovesArroundCell : Board -> LandscapeCard -> CellCoordinates -> List Move
@@ -91,8 +86,17 @@ getPossibleMovesArroundCell board card ( col, row, pos ) =
                 , ( col, row - 1, CellLeft )
                 ]
             )
+
+        coordToMoves : CellCoordinates -> List Move -> List Move
+        coordToMoves coord moves =
+            case getPossibleRotationsByCoordinates board card coord of
+                [] ->
+                    moves
+
+                rots ->
+                    { coord = coord, rots = rots } :: moves
     in
-        List.map (\coord -> getPossibleRotationsByCoordinates board card coord |> zipCoordToRot coord) coordsToCheck |> List.concat
+        List.foldl coordToMoves [] coordsToCheck
 
 
 getPossibleMovesArroundBinome : Board -> LandscapeCard -> ( Int, Int ) -> List Move
@@ -119,6 +123,10 @@ movesToBoard : List Move -> LandscapeCard -> Board
 movesToBoard moves card =
     let
         pokeCard move board =
-            setLandscape move.coord (rotateLandscapeCard move.rot card) board
+            let
+                headRot =
+                    Maybe.withDefault 0 <| List.head move.rots
+            in
+                setLandscape move.coord (rotateLandscapeCard headRot card) board
     in
         List.foldr pokeCard { landscapes = Dict.empty } moves
