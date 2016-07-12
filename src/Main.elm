@@ -75,7 +75,7 @@ type Msg
     | BoundingClientRect ClientRect
     | LaunchGame (List String) LandscapeDeck
     | WizardMsg LaunchWizard.Msg
-    | RotTick Time.Time
+    | Tick Time.Time
     | NoOp
 
 
@@ -455,7 +455,7 @@ update msg model =
         BoundingClientRect clientRect ->
             handleBoundingClientRect clientRect model
 
-        RotTick _ ->
+        Tick _ ->
             { model | possibleMoves = Rules.rotateMoves model.possibleMoves } ! []
 
 
@@ -551,5 +551,5 @@ subscriptions model =
         , Keyboard.downs KeyDown
         , landscapeMousePosResult LandscapeMousePos
         , boundingClientRectResult BoundingClientRect
-        , Time.every Time.second RotTick
+        , Time.every Time.second Tick
         ]
