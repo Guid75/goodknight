@@ -3,15 +3,15 @@ module PixelMap
         ( PixelMap
         , PixelRow
         , Pixel
-        , render
-        , renderCell
+        , pixelizeBoard
+        , pixelizeCell
         , pokeLeftCell
         , pokePixel
         , pokeRightCell
         , grayIt
         )
 
-import Cards
+import Cards exposing (LandscapeCard)
 import Board
 import Dict exposing (Dict)
 import Color exposing (Color)
@@ -138,7 +138,7 @@ flatEdgeToPixel item =
             blackPixel '#'
 
 
-pokeLeftCell : ( Int, Int ) -> Cards.LandscapeCard -> PixelMap -> PixelMap
+pokeLeftCell : ( Int, Int ) -> LandscapeCard -> PixelMap -> PixelMap
 pokeLeftCell ( row, col ) card pixelMap =
     let
         ( corner0, corner1, corner2 ) =
@@ -175,24 +175,19 @@ pokeLeftCell ( row, col ) card pixelMap =
             |> pokeMonoPixel ( row + 3, col + 6 ) ' '
 
 
-renderLeftCell : ( Int, Int ) -> Maybe Cards.LandscapeCard -> PixelMap -> PixelMap
-renderLeftCell ( x, y ) maybeCard pixelMap =
-    case maybeCard of
-        Nothing ->
-            pixelMap
+pixelizeLeftCell : ( Int, Int ) -> LandscapeCard -> PixelMap -> PixelMap
+pixelizeLeftCell ( x, y ) card pixelMap =
+    let
+        row =
+            y * 4
 
-        Just card ->
-            let
-                row =
-                    y * 4
-
-                col =
-                    x * 8 - (y * 4)
-            in
-                pokeLeftCell ( row, col ) card pixelMap
+        col =
+            x * 8 - (y * 4)
+    in
+        pokeLeftCell ( row, col ) card pixelMap
 
 
-pokeRightCell : ( Int, Int ) -> Cards.LandscapeCard -> PixelMap -> PixelMap
+pokeRightCell : ( Int, Int ) -> LandscapeCard -> PixelMap -> PixelMap
 pokeRightCell ( row, col ) card pixelMap =
     let
         ( corner0, corner1, corner2 ) =
@@ -229,45 +224,51 @@ pokeRightCell ( row, col ) card pixelMap =
             |> pokeMonoPixel ( row + 3, col + 4 ) ' '
 
 
-renderRightCell : ( Int, Int ) -> Maybe Cards.LandscapeCard -> PixelMap -> PixelMap
-renderRightCell ( x, y ) maybeCard pixelMap =
+pixelizeRightCell : ( Int, Int ) -> LandscapeCard -> PixelMap -> PixelMap
+pixelizeRightCell ( x, y ) card pixelMap =
+    let
+        row =
+            y * 4
+
+        col =
+            x * 8 - (y * 4) + 4
+    in
+        pokeRightCell ( row, col ) card pixelMap
+
+
+pixelizeCell : Board.CellCoordinates -> LandscapeCard -> PixelMap -> PixelMap
+pixelizeCell ( x, y, position ) card pixelMap =
+    case position of
+        Board.CellLeft ->
+            pixelizeLeftCell ( x, y ) card pixelMap
+
+        Board.CellRight ->
+            pixelizeRightCell ( x, y ) card pixelMap
+
+
+maybePixelizeCell : Board.CellCoordinates -> Maybe LandscapeCard -> PixelMap -> PixelMap
+maybePixelizeCell coord maybeCard pixelMap =
     case maybeCard of
         Nothing ->
             pixelMap
 
         Just card ->
-            let
-                row =
-                    y * 4
-
-                col =
-                    x * 8 - (y * 4) + 4
-            in
-                pokeRightCell ( row, col ) card pixelMap
+            pixelizeCell coord card pixelMap
 
 
-renderCell : Board.CellCoordinates -> Board.CellBinome Cards.LandscapeCard -> PixelMap -> PixelMap
-renderCell ( x, y, position ) cellBinome pixelMap =
-    case position of
-        Board.CellLeft ->
-            renderLeftCell ( x, y ) cellBinome.left pixelMap
-
-        Board.CellRight ->
-            renderRightCell ( x, y ) cellBinome.right pixelMap
-
-
-render : Board.Board -> PixelMap -> PixelMap
-render board pixelMap =
+pixelizeBoard : Board.Board -> PixelMap -> PixelMap
+pixelizeBoard board pixelMap =
     let
-        renderBinome x y cellBinome pixelMap =
-            renderCell ( x, y, Board.CellLeft ) cellBinome pixelMap
-                |> renderCell ( x, y, Board.CellRight ) cellBinome
+        pixelizeBinome x y cellBinome pixelMap =
+            pixelMap
+                |> maybePixelizeCell ( x, y, Board.CellLeft ) cellBinome.left
+                |> maybePixelizeCell ( x, y, Board.CellRight ) cellBinome.right
 
-        renderColumn : Int -> Board.Column Cards.LandscapeCard -> PixelMap -> PixelMap
-        renderColumn x column pixelMap =
-            Dict.foldl (renderBinome x) pixelMap column
+        pixelizeColumn : Int -> Board.Column Cards.LandscapeCard -> PixelMap -> PixelMap
+        pixelizeColumn x column pixelMap =
+            Dict.foldl (pixelizeBinome x) pixelMap column
     in
-        Dict.foldl renderColumn pixelMap board.landscapes
+        Dict.foldl pixelizeColumn pixelMap board.landscapes
 
 
 grayIt : PixelMap -> PixelMap

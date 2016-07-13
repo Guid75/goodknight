@@ -51,7 +51,7 @@ type alias Model =
     , landscapeFontName : String
     , landscapeFontSize : Int
     , landscapeCharSize : FloatSize
-    , hoveredCell : CellCoordinates
+    , hoveredCellCoord : CellCoordinates
     , running : Bool
     , players : List Player
     , currentPlayer : Maybe String
@@ -117,7 +117,7 @@ init =
     , landscapeFontSize = defaultLandscapeFontSize
     , landscapeMousePos = ( 0, 0 )
     , landscapeCharSize = { w = 7.5, h = 14.0 }
-    , hoveredCell = ( 0, 0, CellLeft )
+    , hoveredCellCoord = ( 0, 0, CellLeft )
     , players = []
     , currentPlayer = Nothing
     , currentRot = 0
@@ -220,10 +220,10 @@ viewBoard model =
                 ]
                 (List.append
                     (Dict.empty
-                        |> PixelMap.render (Rules.movesToBoard model.possibleMoves currentCard)
+                        |> PixelMap.pixelizeBoard (Rules.movesToBoard model.possibleMoves currentCard)
                         |> PixelMap.grayIt
-                        |> PixelMap.render model.board
-                        |> PixelMap.renderCell model.hoveredCell { left = Just rotatedCurrentCard, right = Just rotatedCurrentCard }
+                        |> PixelMap.pixelizeBoard model.board
+                        |> PixelMap.pixelizeCell model.hoveredCellCoord rotatedCurrentCard
                         |> Render.renderMapToHtml model.topLeft
                     )
                     [ div [ huvStyle model ]
@@ -308,8 +308,8 @@ getTriangle landscapeCharSize ( col, row, cellPosition ) =
                 ( { x = x + triangleSize.w / 2.0, y = y }, { x = x + triangleSize.w * 1.5, y = y }, { x = x + triangleSize.w, y = y + triangleSize.h } )
 
 
-getHoveredCell : Model -> CellCoordinates
-getHoveredCell model =
+getHoveredCellCoord : Model -> CellCoordinates
+getHoveredCellCoord model =
     let
         absoluteMouseCoord : Point
         absoluteMouseCoord =
@@ -387,7 +387,7 @@ mouseMove ( x, y ) model =
         if model.mousePressed then
             mouseMoveWhilePressed model'
         else
-            { model' | hoveredCell = getHoveredCell model' }
+            { model' | hoveredCellCoord = getHoveredCellCoord model' }
 
 
 handleKeyDown : Int -> Model -> ( Model, Cmd Msg )
