@@ -47,6 +47,7 @@ type alias Model =
     , mousePressedInitialBoard : ( Int, Int )
     , mousePressedInitialPos : ( Int, Int )
     , mouseCurrentPos : ( Int, Int )
+    , draggingBoard : Bool
     , landscapeMousePos : ( Int, Int )
     , landscapeFontName : String
     , landscapeFontSize : Int
@@ -107,12 +108,13 @@ init : ( Model, Cmd Msg )
 init =
     { board =
         Board.init Board.CellLeft 0
-            |> tmpInitBoard
+        --            |> tmpInitBoard
     , topLeft = ( 0, 0 )
     , mousePressed = False
     , mousePressedInitialPos = ( 0, 0 )
     , mousePressedInitialBoard = ( 0, 0 )
     , mouseCurrentPos = ( 0, 0 )
+    , draggingBoard = False
     , landscapeFontName = defaultLandscapeFontName
     , landscapeFontSize = defaultLandscapeFontSize
     , landscapeMousePos = ( 0, 0 )
@@ -357,18 +359,26 @@ mouseMoveWhilePressed model =
         ( initialX, initialY ) =
             model.mousePressedInitialPos
 
+        distance =
+            toFloat ((initialX - x) ^ 2 + (initialY - y) ^ 2) |> sqrt
+
         deltaX =
             floor ((toFloat (x - initialX)) / model.landscapeCharSize.w)
 
         deltaY =
             floor ((toFloat (y - initialY)) / model.landscapeCharSize.h)
     in
-        { model
-            | topLeft =
-                ( fst model.mousePressedInitialBoard - deltaX
-                , snd model.mousePressedInitialBoard - deltaY
-                )
-        }
+        if model.draggingBoard then
+            { model
+                | topLeft =
+                    ( fst model.mousePressedInitialBoard - deltaX
+                    , snd model.mousePressedInitialBoard - deltaY
+                    )
+            }
+        else
+            { model
+                | draggingBoard = distance > 3.0
+            }
 
 
 mousePosToCharPos : FloatSize -> ( Int, Int ) -> ( Int, Int ) -> ( Int, Int )
@@ -432,14 +442,45 @@ update msg model =
             ( model, requestLandscapeMousePos ( pos.x, pos.y ) )
 
         MousePress pressed ->
-            { model
-                | mousePressed = pressed
-                , mousePressedInitialPos = model.mouseCurrentPos
-                , mousePressedInitialBoard =
-                    model.topLeft
-                    -- , board = Board.setLandscape model.hoveredCell backCard model.board
-            }
-                ! []
+            let
+                currentCard =
+                    List.head model.currentDeck
+                        |> Maybe.withDefault backCard
+
+                rotatedCurrentCard =
+                    rotateLandscapeCard model.currentRot currentCard
+
+                createCard =
+                    (model.draggingBoard == False) && (pressed == False)
+
+                commonModel =
+                    { model
+                        | mousePressed = pressed
+                        , draggingBoard = False
+                    }
+
+                newModel =
+                    if pressed then
+                        { commonModel
+                            | mousePressedInitialPos = commonModel.mouseCurrentPos
+                            , mousePressedInitialBoard = commonModel.topLeft
+                        }
+                    else if createCard then
+                        { commonModel
+                            | board = Board.setLandscape commonModel.hoveredCellCoord rotatedCurrentCard commonModel.board
+                            , currentDeck = Maybe.withDefault [] (List.tail commonModel.currentDeck)
+                        }
+                    else
+                        commonModel
+            in
+                { newModel
+                    | possibleMoves =
+                        if createCard then
+                            Rules.getPossibleMoves newModel.board <| Maybe.withDefault backCard <| List.head newModel.currentDeck
+                        else
+                            newModel.possibleMoves
+                }
+                    ! []
 
         KeyDown code ->
             handleKeyDown code model
