@@ -1,7 +1,5 @@
 module Render exposing (renderMapToHtml)
 
-import Cards
-import Board
 import List
 import String
 import Dict exposing (Dict)

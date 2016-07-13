@@ -4,7 +4,6 @@ import Json.Decode
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import Debug
 import String
 import Result
 import Maybe

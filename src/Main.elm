@@ -1,14 +1,11 @@
 port module GoodKnight exposing (..)
 
-import Debug
 import Dict
 import Array exposing (Array)
-import Result
 import Html exposing (..)
 import Html.App as App
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import Color
 import Keyboard exposing (KeyCode)
 import Mouse
 import Time
@@ -22,6 +19,7 @@ import Render
 import LaunchWizard
 
 
+main : Program Never
 main =
     App.program
         { init = init

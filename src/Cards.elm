@@ -1,7 +1,6 @@
 module Cards exposing (..)
 
 import Array exposing (Array)
-import Random
 import Color
 
 
@@ -136,6 +135,7 @@ backCard =
     }
 
 
+castleCard : LandscapeCard
 castleCard =
     { corners = ( Neutral, Tournament, Neutral )
     , edges = allNeutral

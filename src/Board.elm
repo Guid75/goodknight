@@ -12,7 +12,6 @@ module Board
         , setCell
         )
 
-import Array
 import Dict exposing (Dict)
 import Maybe
 import Cards exposing (..)

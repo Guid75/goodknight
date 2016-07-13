@@ -1,6 +1,5 @@
 module Rules exposing (..)
 
-import Debug
 import Dict
 import Maybe
 import Array

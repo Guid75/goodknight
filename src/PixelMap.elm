@@ -13,8 +13,6 @@ module PixelMap
 
 import Cards
 import Board
-import List
-import String
 import Dict exposing (Dict)
 import Color exposing (Color)
 
