@@ -442,45 +442,7 @@ update msg model =
             ( model, requestLandscapeMousePos ( pos.x, pos.y ) )
 
         MousePress pressed ->
-            let
-                currentCard =
-                    List.head model.currentDeck
-                        |> Maybe.withDefault backCard
-
-                rotatedCurrentCard =
-                    rotateLandscapeCard model.currentRot currentCard
-
-                createCard =
-                    (model.draggingBoard == False) && (pressed == False)
-
-                commonModel =
-                    { model
-                        | mousePressed = pressed
-                        , draggingBoard = False
-                    }
-
-                newModel =
-                    if pressed then
-                        { commonModel
-                            | mousePressedInitialPos = commonModel.mouseCurrentPos
-                            , mousePressedInitialBoard = commonModel.topLeft
-                        }
-                    else if createCard then
-                        { commonModel
-                            | board = Board.setLandscape commonModel.hoveredCellCoord rotatedCurrentCard commonModel.board
-                            , currentDeck = Maybe.withDefault [] (List.tail commonModel.currentDeck)
-                        }
-                    else
-                        commonModel
-            in
-                { newModel
-                    | possibleMoves =
-                        if createCard then
-                            Rules.getPossibleMoves newModel.board <| Maybe.withDefault backCard <| List.head newModel.currentDeck
-                        else
-                            newModel.possibleMoves
-                }
-                    ! []
+            handleMousePress pressed model
 
         KeyDown code ->
             handleKeyDown code model
@@ -496,6 +458,49 @@ update msg model =
 
         Tick _ ->
             { model | possibleMoves = Rules.rotateMoves model.possibleMoves } ! []
+
+
+handleMousePress : Bool -> Model -> ( Model, Cmd Msg )
+handleMousePress pressed model =
+    let
+        currentCard =
+            List.head model.currentDeck
+                |> Maybe.withDefault backCard
+
+        rotatedCurrentCard =
+            rotateLandscapeCard model.currentRot currentCard
+
+        createCard =
+            (model.draggingBoard == False) && (pressed == False)
+
+        commonModel =
+            { model
+                | mousePressed = pressed
+                , draggingBoard = False
+            }
+
+        newModel =
+            if pressed then
+                { commonModel
+                    | mousePressedInitialPos = commonModel.mouseCurrentPos
+                    , mousePressedInitialBoard = commonModel.topLeft
+                }
+            else if createCard then
+                { commonModel
+                    | board = Board.setLandscape commonModel.hoveredCellCoord rotatedCurrentCard commonModel.board
+                    , currentDeck = Maybe.withDefault [] (List.tail commonModel.currentDeck)
+                }
+            else
+                commonModel
+    in
+        { newModel
+            | possibleMoves =
+                if createCard then
+                    Rules.getPossibleMoves newModel.board <| Maybe.withDefault backCard <| List.head newModel.currentDeck
+                else
+                    newModel.possibleMoves
+        }
+            ! []
 
 
 handleBoundingClientRect : ClientRect -> Model -> ( Model, Cmd Msg )
