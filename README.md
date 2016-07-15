@@ -6,7 +6,7 @@ Built in Elm because it's a language so great it gives me tears of joy every tim
 
 **WARNING: not playable yet**
 
-# Installation
+# How to install and play
 
 Building the elm bundle at the right place is enough:
 
