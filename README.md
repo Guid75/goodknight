@@ -8,10 +8,10 @@ WARNING: not playable yet
 
 # Installation
 
-Just building the elm bundle at the right place is enough:
+Building the elm bundle at the right place is enough:
 
 ```
 elm make src/Main.elm --output elm.js
 ```
 
-Than open the `index.html` file with your browser and that's all.
+Then open the `index.html` file with your browser and that's all.
