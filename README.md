@@ -1,4 +1,4 @@
-An adaptation of the "Richard Ritterschlag" game for chidren.
+An adaptation of the "Richard Ritterschlag" chidren's game.
 
 Uses ASCII for board display (because it is challenging).
 
