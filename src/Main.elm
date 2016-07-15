@@ -65,7 +65,8 @@ type alias Model =
 
 type Msg
     = Move Int Int
-    | MousePress Bool
+    | MousePress
+    | MouseRelease
     | MouseMove { x : Int, y : Int }
     | KeyDown KeyCode
     | CharSizeResult ( Float, Float )
@@ -215,8 +216,8 @@ viewBoard model =
             [ div [ topBarStyle model ]
                 [ text <| "Current player: " ++ (Maybe.withDefault "<unamed player>" model.currentPlayer) ]
             , pre
-                [ onMouseDown (MousePress True)
-                , onMouseUp (MousePress False)
+                [ onMouseDown MousePress
+                , onMouseUp MouseRelease
                 , landscapeStyle model
                 , id "landscape"
                 ]
@@ -441,8 +442,11 @@ update msg model =
         MouseMove pos ->
             ( model, requestLandscapeMousePos ( pos.x, pos.y ) )
 
-        MousePress pressed ->
-            handleMousePress pressed model
+        MousePress ->
+            handleMousePress model
+
+        MouseRelease ->
+            handleMouseRelease model
 
         KeyDown code ->
             handleKeyDown code model
@@ -460,47 +464,52 @@ update msg model =
             { model | possibleMoves = Rules.rotateMoves model.possibleMoves } ! []
 
 
-handleMousePress : Bool -> Model -> ( Model, Cmd Msg )
-handleMousePress pressed model =
+handleMousePress : Model -> ( Model, Cmd Msg )
+handleMousePress model =
+    { model
+        | mousePressed = True
+        , mousePressedInitialPos = model.mouseCurrentPos
+        , mousePressedInitialBoard = model.topLeft
+    }
+        ! []
+
+
+handleMouseRelease : Model -> ( Model, Cmd Msg )
+handleMouseRelease model =
+    let
+        commonModel =
+            { model
+                | mousePressed = False
+                , draggingBoard = False
+            }
+    in
+        (if model.draggingBoard then
+            commonModel
+         else
+            playLandscapeCard commonModel
+        )
+            ! []
+
+
+playLandscapeCard : Model -> Model
+playLandscapeCard model =
     let
         currentCard =
             List.head model.currentDeck
+                |> Maybe.map (rotateLandscapeCard model.currentRot)
                 |> Maybe.withDefault backCard
 
-        rotatedCurrentCard =
-            rotateLandscapeCard model.currentRot currentCard
+        newBoard =
+            Board.setLandscape model.hoveredCellCoord currentCard model.board
 
-        createCard =
-            (model.draggingBoard == False) && (pressed == False)
-
-        commonModel =
-            { model
-                | mousePressed = pressed
-                , draggingBoard = False
-            }
-
-        newModel =
-            if pressed then
-                { commonModel
-                    | mousePressedInitialPos = commonModel.mouseCurrentPos
-                    , mousePressedInitialBoard = commonModel.topLeft
-                }
-            else if createCard then
-                { commonModel
-                    | board = Board.setLandscape commonModel.hoveredCellCoord rotatedCurrentCard commonModel.board
-                    , currentDeck = Maybe.withDefault [] (List.tail commonModel.currentDeck)
-                }
-            else
-                commonModel
+        newDeck =
+            Maybe.withDefault [] (List.tail model.currentDeck)
     in
-        { newModel
-            | possibleMoves =
-                if createCard then
-                    Rules.getPossibleMoves newModel.board <| Maybe.withDefault backCard <| List.head newModel.currentDeck
-                else
-                    newModel.possibleMoves
+        { model
+            | board = newBoard
+            , currentDeck = newDeck
+            , possibleMoves = Rules.getPossibleMoves newBoard <| Maybe.withDefault backCard <| List.head newDeck
         }
-            ! []
 
 
 handleBoundingClientRect : ClientRect -> Model -> ( Model, Cmd Msg )
