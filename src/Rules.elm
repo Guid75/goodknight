@@ -11,7 +11,7 @@ getSurroundingSides : Board -> CellCoordinates -> ( Maybe LandscapeSide, Maybe L
 getSurroundingSides board ( x, y, pos ) =
     let
         getMaybeSide ( x, y, pos ) sideIndex =
-            getLandscape ( x, y, pos ) board |> Maybe.map (getLandscapeSide sideIndex)
+            getLandscapeCard ( x, y, pos ) board |> Maybe.map (getLandscapeSide sideIndex)
     in
         case pos of
             CellLeft ->
@@ -130,7 +130,7 @@ movesToBoard moves card =
                         |> Array.get move.currentRot
                         |> Maybe.withDefault 0
             in
-                setLandscape move.coord (rotateLandscapeCard nthRot card) board
+                setLandscapeCard move.coord (rotateLandscapeCard nthRot card) board
     in
         List.foldr pokeCard { landscapes = Dict.empty } moves
 

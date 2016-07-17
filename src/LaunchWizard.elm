@@ -5,9 +5,10 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import String
-import Result
 import Maybe
+import Result
 import Array exposing (Array)
+import Validate exposing (ifBlank, Validator)
 
 
 type alias Model =
@@ -54,7 +55,28 @@ playerInput model index =
         div []
             [ text <| "Player " ++ (toString <| index + 1)
             , input [ value name, onInput (ChangeName index) ] []
+            , span
+                [ style
+                    [ ( "color", "red" )
+                    ]
+                ]
+                [ ifBlank "Should not be empty" name |> List.head |> Maybe.withDefault "" |> text ]
             ]
+
+
+nameValidator : Validator String String
+nameValidator =
+    ifBlank "Should not be empty"
+
+
+isSubmitable : List String -> Bool
+isSubmitable names =
+    let
+        validateName : String -> Bool
+        validateName name =
+            List.length (nameValidator name) == 0
+    in
+        List.all validateName names
 
 
 view : Model -> Html Msg
@@ -74,7 +96,11 @@ view model =
             , (List.map (playerInput model)
                 [0..model.playerCount - 1]
               )
-            , [ button [ onClick Start ] [ text "Start" ]
+            , [ button
+                    [ onClick Start
+                    , model.names |> Array.toList |> isSubmitable |> not |> disabled
+                    ]
+                    [ text "Start" ]
               ]
             ]
         )

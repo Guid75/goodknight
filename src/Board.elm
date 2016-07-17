@@ -7,9 +7,8 @@ module Board
         , Board
         , Column
         , init
-        , getLandscape
-        , setLandscape
-        , setCell
+        , getLandscapeCard
+        , setLandscapeCard
         )
 
 import Dict exposing (Dict)
@@ -116,11 +115,11 @@ setCell ( x, y, pos ) item grid =
                 Dict.insert x (Dict.singleton y newBinome) grid
 
 
-getLandscape : CellCoordinates -> Board -> Maybe LandscapeCard
-getLandscape coord board =
+getLandscapeCard : CellCoordinates -> Board -> Maybe LandscapeCard
+getLandscapeCard coord board =
     getCell coord board.landscapes
 
 
-setLandscape : CellCoordinates -> LandscapeCard -> Board -> Board
-setLandscape coord card board =
+setLandscapeCard : CellCoordinates -> LandscapeCard -> Board -> Board
+setLandscapeCard coord card board =
     { board | landscapes = (setCell coord card board.landscapes) }

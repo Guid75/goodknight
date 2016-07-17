@@ -12,7 +12,7 @@ import Time
 import Random
 import Random.Array
 import Cards exposing (..)
-import Board exposing (setCell, Board, CellCoordinates, CellPosition(..))
+import Board exposing (Board, CellCoordinates, CellPosition(..))
 import Rules
 import PixelMap
 import Render
@@ -88,11 +88,11 @@ type alias FloatSize =
 tmpInitBoard : Board -> Board
 tmpInitBoard board =
     board
-        |> Board.setLandscape ( 2, 0, Board.CellLeft ) (getLandscapeCardAndRotate 3 0)
-        |> Board.setLandscape ( 2, 0, Board.CellRight ) (getLandscapeCardAndRotate 3 0)
-        |> Board.setLandscape ( 0, -1, Board.CellLeft ) (getLandscapeCardAndRotate 7 2)
-        |> Board.setLandscape ( 0, -2, Board.CellLeft ) (getLandscapeCardAndRotate 7 2)
-        |> Board.setLandscape ( 0, -3, Board.CellLeft ) (getLandscapeCardAndRotate 15 1)
+        |> Board.setLandscapeCard ( 2, 0, Board.CellLeft ) (getLandscapeCardAndRotate 3 0)
+        |> Board.setLandscapeCard ( 2, 0, Board.CellRight ) (getLandscapeCardAndRotate 3 0)
+        |> Board.setLandscapeCard ( 0, -1, Board.CellLeft ) (getLandscapeCardAndRotate 7 2)
+        |> Board.setLandscapeCard ( 0, -2, Board.CellLeft ) (getLandscapeCardAndRotate 7 2)
+        |> Board.setLandscapeCard ( 0, -3, Board.CellLeft ) (getLandscapeCardAndRotate 15 1)
 
 
 defaultLandscapeFontName : String
@@ -130,7 +130,7 @@ init =
     , possibleMoves = []
     }
         ! [ requestCharSize ( defaultLandscapeFontName, defaultLandscapeFontSize )
-          , Random.generate (LaunchGame [ "toto", "titi" ]) <| Random.Array.shuffle initialLandscapeDeck
+            --, Random.generate (LaunchGame [ "toto", "titi" ]) <| Random.Array.shuffle initialLandscapeDeck
           ]
 
 
@@ -500,7 +500,7 @@ playLandscapeCard model =
                 |> Maybe.withDefault backCard
 
         newBoard =
-            Board.setLandscape model.hoveredCellCoord currentCard model.board
+            Board.setLandscapeCard model.hoveredCellCoord currentCard model.board
 
         newDeck =
             Maybe.withDefault [] (List.tail model.currentDeck)
